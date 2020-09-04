@@ -2,16 +2,21 @@
 
 namespace kvm {
 
-  USBDevice::USBDevice(const USBDevice::VendorID& vendorID, const USBDevice::ProductID& productID) :
+  USBDevice::USBDevice(const USBDevice::Description& description, USBDevice::VendorID vendorID, const USBDevice::ProductID productID) :
+  m_description(description),
   m_vendorID(vendorID),
   m_productID(productID)
   {}
 
-  const USBDevice::VendorID& USBDevice::GetVendorID() const {
+  const USBDevice::Description& USBDevice::GetDescription() const {
+    return m_description;
+  }
+
+  USBDevice::VendorID USBDevice::GetVendorID() const {
     return m_vendorID;
   }
 
-  const USBDevice::ProductID& USBDevice::GetProductID() const {
+  USBDevice::ProductID USBDevice::GetProductID() const {
     return m_productID;
   }
 

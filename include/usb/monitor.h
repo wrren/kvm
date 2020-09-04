@@ -6,6 +6,8 @@
 #include <optional>
 #include <string>
 
+struct libusb_context;
+
 namespace kvm {
 
   /**
@@ -13,26 +15,30 @@ namespace kvm {
    */
   class USBMonitor {
   public:
-
-    /**
-     * Initialize USB monitoring. Returns an optional that, if set, indicates that an error occurred and contains
-     * a human-readable error string.
-     */
-    std::optional<std::string> Initialize();
-
     class Subscriber {
     public:
 
       /**
        * Called when a USB device is connected to this computer.
        */
-      void OnDeviceConnected(const kvm::USBDevice& device);
+      virtual void OnDeviceConnected(const kvm::USBDevice& device) = 0;
 
       /**
        * Called when a USB device is disconnected from this computer.
        */
-      void OnDeviceDisconnected(const kvm::USBDevice& device);
+      virtual void OnDeviceDisconnected(const kvm::USBDevice& device) = 0;
     };
+
+    /**
+     * Default Constructor
+     */
+    USBMonitor();
+
+    /**
+     * Initialize USB monitoring. Returns an optional that, if set, indicates that an error occurred and contains
+     * a human-readable error string.
+     */
+    std::optional<std::string> Initialize();
 
     /**
      * Get a list of all connected USB devices.
@@ -49,10 +55,23 @@ namespace kvm {
      */
     void Unsubscribe(Subscriber* subscriber);
 
+    /**
+     * List USB event subscribers
+     */
+    const std::vector<Subscriber*> ListSubscribers() const;
+
+    /**
+     * Check for new device connect or disconnect events.
+     */
+    void CheckForDeviceEvents();
+
   private:
 
     /// Device event subscribers
     std::vector<Subscriber*> m_subscribers;
+
+    /// LibUSB Context
+    libusb_context* m_ctx;
   };
 }
 

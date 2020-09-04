@@ -10,25 +10,32 @@ namespace kvm {
   class USBDevice {
   public:
 
-    typedef std::string VendorID;
-    typedef std::string ProductID;
+    typedef std::string Description;
+    typedef uint16_t VendorID;
+    typedef uint16_t ProductID;
 
     /**
      * Initializing Constructor
+     * @param description Device description
      * @param vendorID Device Vendor ID
      * @param productID Device Product ID
      */
-    USBDevice(const VendorID& vendorID, const ProductID& productID);
+    USBDevice(const Description& description, const VendorID vendorID, const ProductID productID);
+
+    /**
+     * Get the human-readable description of this device
+     */
+    const Description& GetDescription() const;
 
     /**
      * Get this device's vendor ID
      */
-    const VendorID& GetVendorID() const;
+    VendorID GetVendorID() const;
 
     /**
      * Get this device's product ID
      */
-    const ProductID& GetProductID() const;
+    ProductID GetProductID() const;
 
     /**
      * Comparison Operator
@@ -36,7 +43,9 @@ namespace kvm {
     bool operator==(const USBDevice& other) const;
 
   private:
-
+    
+    // Human-readable device description
+    Description m_description;
     // Vendor ID
     VendorID m_vendorID;
     // Product ID
