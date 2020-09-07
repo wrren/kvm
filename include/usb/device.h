@@ -2,6 +2,8 @@
 #define KVM_USB_DEVICE_H
 
 #include <string>
+#include <iostream>
+#include <vector>
 
 namespace kvm {
   /**
@@ -41,6 +43,11 @@ namespace kvm {
      * Comparison Operator
      */
     bool operator==(const USBDevice& other) const;
+
+    /**
+     * Prints a table detailing the given list of USB devices to the given output stream.
+     */
+    static void PrintDeviceList(const std::vector<USBDevice>& devices, std::ostream& stream);
 
   private:
     

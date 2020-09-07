@@ -1,15 +1,16 @@
 #ifndef KVM_USB_MONITOR_H
 #define KVM_USB_MONITOR_H
 
+#include <kvm.h>
 #include <usb/device.h>
 #include <vector>
 #include <optional>
 #include <string>
+#include <mutex>
 
 struct libusb_context;
 
 namespace kvm {
-
   /**
    * Monitors for changes in connected USB devices.
    */
@@ -29,6 +30,16 @@ namespace kvm {
       virtual void OnDeviceDisconnected(const kvm::USBDevice& device) = 0;
     };
 
+    enum InitializationError {
+      INITIALIZATION_FAILURE,
+      HOTPLUG_CAPABILITY_UNAVAILABLE,
+      HOTPLUG_CALLBACK_REGISTRATION_FAILURE
+    };
+
+    enum DeviceConversionError {
+      DEVICE_OPEN_FAILURE
+    };
+
     /**
      * Default Constructor
      */
@@ -36,9 +47,9 @@ namespace kvm {
 
     /**
      * Initialize USB monitoring. Returns an optional that, if set, indicates that an error occurred and contains
-     * a human-readable error string.
+     * an enum value indicating the nature of the error.
      */
-    std::optional<std::string> Initialize();
+    std::optional<InitializationError> Initialize();
 
     /**
      * Get a list of all connected USB devices.
@@ -56,14 +67,19 @@ namespace kvm {
     void Unsubscribe(Subscriber* subscriber);
 
     /**
-     * List USB event subscribers
-     */
-    const std::vector<Subscriber*> ListSubscribers() const;
-
-    /**
      * Check for new device connect or disconnect events.
      */
     void CheckForDeviceEvents();
+
+    /**
+     * Called when a new device is connected to the system
+     */
+    void OnDeviceConnected(const USBDevice& device);
+
+    /**
+     * Called when a device is disconnected from the system
+     */
+    void OnDeviceDisconnected(const USBDevice& device);
 
   private:
 
@@ -72,6 +88,12 @@ namespace kvm {
 
     /// LibUSB Context
     libusb_context* m_ctx;
+
+    /// Connected Devices
+    std::vector<USBDevice> m_devices;
+
+    /// Controls access to the device list from other threads
+    std::mutex m_deviceMutex;
   };
 }
 

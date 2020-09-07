@@ -2,25 +2,35 @@ if not is_os("windows") then
   add_requires("libusb")
 end
 
-target("console")
+add_requires("catch2")
+
+target("kvm")
   set_kind("binary")
   set_languages("cxx17")
-  add_files("src/*.cpp", "src/usb/*.cpp", "src/ddc/*.cpp")
+  add_files("src/*.cpp", "src/usb/**.cpp", "src/display/**.cpp", "src/networking/**.cpp")
   add_includedirs("$(projectdir)/include")
+  set_symbols("debug")
 
   if is_os("windows") then
     add_files("src/platform/windows/*.cpp")
     add_includedirs("$(projectdir)/deps/libusb/include/libusb-1.0")
     add_linkdirs("deps/libusb/MS64/static")
     add_links("libusb-1.0")
+    add_defines("KVM_OS_WINDOWS")
   end
 
   if is_os("linux") then
     add_files("src/platform/linux/*.cpp")
+    add_files("src/platform/unix/*.cpp")
     add_packages("libusb")
+    add_defines("KVM_OS_LINUX")
   end
 
   if is_os("macosx") then
     add_files("src/platform/mac/*.cpp")
+    add_files("src/platform/unix/*.cpp")
     add_packages("libusb")
+    add_frameworks("CoreGraphics", "AppKit", "DriverKit", "IOKit", "CoreFoundation", "Foundation")
+    add_defines("KVM_OS_MAC")
+    add_ldflags("-lobjc")
   end

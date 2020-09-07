@@ -1,0 +1,59 @@
+#ifndef KVM_PLATFORM_DDC_MAC_H
+#define KVM_PLATFORM_DDC_MAC_H
+
+#include <display/display.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <IOKit/graphics/IOGraphicsLib.h>
+
+namespace kvm {
+    /**
+     * Allows DDC commands to be sent to a Display.
+     */
+    class DDC {
+    public:
+
+        typedef struct {
+            uint8_t controlID;
+            uint8_t maxValue;
+            uint8_t currentValue;
+            bool    success;
+        } ReadCommand;
+
+        typedef struct {
+            uint8_t controlID;
+            uint8_t newValue;
+        } WriteCommand;
+
+        enum class ServicePortType {
+            IO_CONNECT,
+            FRAMEBUFFER
+        };
+
+        /**
+         * Get the IO Service Port that corresponds with the given display ID and port type.
+         */
+        static io_service_t IOServicePortFromCGDisplayID(DisplayID id, ServicePortType type);
+
+        /**
+         * Send a read command to the given display.
+         */
+        static bool Read(DisplayID display, ReadCommand& command);
+
+        /**
+         * Send a write command to the given display.
+         */
+        static bool Write(DisplayID display, const WriteCommand& command);
+
+        /**
+         * Get the current value for the given control.
+         */
+        static bool GetControlValue(DisplayID display, uint8_t controlID, uint8_t& currentValue);
+
+        /**
+         * Set a new value for the given control.
+         */
+        static bool SetControlValue(DisplayID display, uint8_t controlID, uint8_t newValue);
+    };
+}
+
+#endif // KVM_PLATFORM_DDC_MAC_H
