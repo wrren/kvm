@@ -30,12 +30,6 @@ namespace kvm {
       virtual void OnDeviceDisconnected(const kvm::USBDevice& device) = 0;
     };
 
-    enum InitializationError {
-      INITIALIZATION_FAILURE,
-      HOTPLUG_CAPABILITY_UNAVAILABLE,
-      HOTPLUG_CALLBACK_REGISTRATION_FAILURE
-    };
-
     enum DeviceConversionError {
       DEVICE_OPEN_FAILURE
     };
@@ -49,7 +43,7 @@ namespace kvm {
      * Initialize USB monitoring. Returns an optional that, if set, indicates that an error occurred and contains
      * an enum value indicating the nature of the error.
      */
-    std::optional<InitializationError> Initialize();
+    bool Initialize();
 
     /**
      * Get a list of all connected USB devices.
@@ -83,15 +77,19 @@ namespace kvm {
 
   private:
 
+    enum class Mode {
+      HOTPLUG_DETECTION,
+      DEVICE_POLLING
+    };
+
+    /// Device attach/detach detection mode.
+    Mode m_mode;
     /// Device event subscribers
     std::vector<Subscriber*> m_subscribers;
-
     /// LibUSB Context
     libusb_context* m_ctx;
-
     /// Connected Devices
     std::vector<USBDevice> m_devices;
-
     /// Controls access to the device list from other threads
     std::mutex m_deviceMutex;
   };

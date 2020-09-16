@@ -9,7 +9,7 @@ namespace kvm {
     class ChangeInputRequest : NetworkMessage {
     public:
 
-        typedef std::map<DisplayID, Display::Input> InputMap;
+        typedef std::map<Display::Index, Display::Input> InputMap;
 
         /**
          * Create a request input message that requests that the specified 

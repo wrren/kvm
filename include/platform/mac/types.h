@@ -4,9 +4,9 @@
 #include <CoreGraphics/CoreGraphics.h>
 
 namespace kvm {
-    typedef CGDirectDisplayID   DisplayID;
-    typedef uint32_t            DisplaySerialNumber;
-    typedef uint32_t            DisplayVendorID;
+    struct DisplayID {
+        CGDirectDisplayID   id;
+    };
 }
 
 #endif // KVM_PLATFORM_TYPES_MAC_H

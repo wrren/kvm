@@ -40,9 +40,11 @@ namespace kvm {
     ProductID GetProductID() const;
 
     /**
-     * Comparison Operator
+     * Comparison Operators
      */
     bool operator==(const USBDevice& other) const;
+    bool operator<(const USBDevice& other) const;
+    bool operator>(const USBDevice& other) const;
 
     /**
      * Prints a table detailing the given list of USB devices to the given output stream.

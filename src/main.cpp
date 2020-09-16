@@ -6,8 +6,8 @@
 int main(int argc, char** argv) {
   kvm::USBMonitor monitor;
 
-  if(auto error = monitor.Initialize()) {
-    std::cout << error.value() << std::endl;
+  if(!monitor.Initialize()) {
+    std::cout << "Failed to initialize USB monitor." << std::endl;
     return EXIT_FAILURE;
   }
 

@@ -21,14 +21,14 @@ namespace kvm {
             m_result.clear();
 
             uint8_t     size;
-            DisplayID   displayID;
+            uint8_t     index;
             uint8_t     result;
 
             buffer >> size;
 
             for(int i = 0; i < size && buffer.GetState() == NetworkBuffer::State::OK; i++) {
-                buffer >> displayID >> result;
-                m_result[displayID] = static_cast<ChangeInputResponse::Result>(result);
+                buffer >> index >> result;
+                m_result[index] = static_cast<ChangeInputResponse::Result>(result);
             }
         }
 

@@ -24,6 +24,12 @@ namespace kvm {
   bool USBDevice::operator==(const USBDevice& other) const {
     return m_vendorID == other.m_vendorID && m_productID == other.m_productID;
   }
+  bool USBDevice::operator>(const USBDevice& other) const {
+    return m_vendorID > other.m_vendorID || m_productID > other.m_productID;
+  }
+  bool USBDevice::operator<(const USBDevice& other) const {
+    return m_vendorID < other.m_vendorID || m_productID < other.m_productID;
+  }
 
   void USBDevice::PrintDeviceList(const std::vector<USBDevice>& devices, std::ostream& stream) {
     stream.setf(std::ios::left, std::ios::adjustfield);

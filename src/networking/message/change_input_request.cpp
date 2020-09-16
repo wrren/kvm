@@ -17,14 +17,16 @@ namespace kvm {
             m_map.clear();
 
             uint8_t     size;
-            DisplayID   displayID;
-            uint8_t     inputID;
+            uint8_t     index;
+            uint8_t     input;
 
             buffer >> size;
 
             for(int i = 0; i < size && buffer.GetState() == NetworkBuffer::State::OK; i++) {
-                buffer >> displayID >> inputID;
-                m_map[displayID] = static_cast<Display::Input>(inputID);
+                buffer >> index >> input;
+                if(buffer.GetState() == NetworkBuffer::State::OK) {
+                    m_map[index] = static_cast<Display::Input>(input);
+                }
             }
         }
 

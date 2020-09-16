@@ -1,8 +1,9 @@
 #include <display/display.h>
 
 namespace kvm {
-    Display::Display(DisplayID id, const std::string& name, Display::Input input) :
+    Display::Display(Display::ID id, Display::Index index, const std::string& name, Display::Input input) :
     m_id(id),
+    m_index(index),
     m_name(name),
     m_input(input)
     {}
@@ -28,7 +29,7 @@ namespace kvm {
         }
     }
 
-    DisplayID Display::GetID() const {
+    Display::ID Display::GetID() const {
         return m_id;
     }
 }

@@ -3,6 +3,7 @@
 
 #include <networking/message.h>
 #include <networking/message/types.h>
+#include <display/display.h>
 #include <kvm.h>
 #include <map>
 
@@ -16,7 +17,7 @@ namespace kvm {
             INPUT_SELECT_SUCCEEDED
         };
 
-        typedef std::map<DisplayID, Result> ResultMap;
+        typedef std::map<Display::Index, Result> ResultMap;
 
         /**
          * Default Constructor

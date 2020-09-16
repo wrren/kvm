@@ -9,14 +9,15 @@ target("kvm")
   set_languages("cxx17")
   add_files("src/*.cpp", "src/usb/**.cpp", "src/display/**.cpp", "src/networking/**.cpp")
   add_includedirs("$(projectdir)/include")
-  set_symbols("debug")
+  add_rules("mode.debug")
 
   if is_os("windows") then
     add_files("src/platform/windows/*.cpp")
     add_includedirs("$(projectdir)/deps/libusb/include/libusb-1.0")
-    add_linkdirs("deps/libusb/MS64/static")
+    add_linkdirs("deps/libusb/MS64/dll")
     add_links("libusb-1.0")
     add_defines("KVM_OS_WINDOWS")
+    add_syslinks("gdi32", "msimg32", "user32")
   end
 
   if is_os("linux") then

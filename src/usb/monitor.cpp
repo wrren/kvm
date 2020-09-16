@@ -72,56 +72,57 @@ namespace kvm {
     m_subscribers.erase(std::remove(m_subscribers.begin(), m_subscribers.end(), subscriber), m_subscribers.end());
   }
 
-  std::optional<USBMonitor::InitializationError> USBMonitor::Initialize() {
+  bool USBMonitor::Initialize() {
     if(m_ctx == nullptr) {
       if(libusb_init(&m_ctx) != 0) {
         m_ctx = nullptr;
-        return INITIALIZATION_FAILURE;
+        return false;
       }
 
       if(!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
         libusb_exit(m_ctx);
-        return HOTPLUG_CAPABILITY_UNAVAILABLE;
-      }
+        m_mode = USBMonitor::Mode::DEVICE_POLLING;
+      } else {
+        auto rc = libusb_hotplug_register_callback(
+          m_ctx, 
+          LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, 
+          LIBUSB_HOTPLUG_NO_FLAGS, 
+          LIBUSB_HOTPLUG_MATCH_ANY, 
+          LIBUSB_HOTPLUG_MATCH_ANY, 
+          LIBUSB_HOTPLUG_MATCH_ANY, 
+          hotplug_callback, 
+          this,
+          NULL
+        );
 
-      auto rc = libusb_hotplug_register_callback(
-        m_ctx, 
-        LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, 
-        LIBUSB_HOTPLUG_NO_FLAGS, 
-        LIBUSB_HOTPLUG_MATCH_ANY, 
-        LIBUSB_HOTPLUG_MATCH_ANY, 
-        LIBUSB_HOTPLUG_MATCH_ANY, 
-        hotplug_callback, 
-        this,
-        NULL
-      );
+        if(rc != LIBUSB_SUCCESS) {
+          libusb_exit(m_ctx);
+          return false;
+        }
 
-      if(rc != LIBUSB_SUCCESS) {
-        libusb_exit(m_ctx);
-        return HOTPLUG_CALLBACK_REGISTRATION_FAILURE;
-      }
+        rc = libusb_hotplug_register_callback(
+          m_ctx, 
+          LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, 
+          LIBUSB_HOTPLUG_NO_FLAGS, 
+          LIBUSB_HOTPLUG_MATCH_ANY, 
+          LIBUSB_HOTPLUG_MATCH_ANY, 
+          LIBUSB_HOTPLUG_MATCH_ANY, 
+          hotplug_callback_detach, 
+          this,
+          NULL
+        );
 
-      rc = libusb_hotplug_register_callback(
-        m_ctx, 
-        LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, 
-        LIBUSB_HOTPLUG_NO_FLAGS, 
-        LIBUSB_HOTPLUG_MATCH_ANY, 
-        LIBUSB_HOTPLUG_MATCH_ANY, 
-        LIBUSB_HOTPLUG_MATCH_ANY, 
-        hotplug_callback_detach, 
-        this,
-        NULL
-      );
-
-      if(rc != LIBUSB_SUCCESS) {
-        libusb_exit(m_ctx);
-        return HOTPLUG_CALLBACK_REGISTRATION_FAILURE;
+        if(rc != LIBUSB_SUCCESS) {
+          libusb_exit(m_ctx);
+          return false;
+        }
+        m_mode = USBMonitor::Mode::HOTPLUG_DETECTION;
       }
 
       ListConnectedDevices();
     }
 
-    return std::optional<USBMonitor::InitializationError>();
+    return true;
   }
 
   std::vector<USBDevice> USBMonitor::ListConnectedDevices() {
@@ -169,6 +170,31 @@ namespace kvm {
   }
 
   void USBMonitor::CheckForDeviceEvents() {
-    libusb_handle_events(m_ctx);
+    if(m_ctx != nullptr) {
+      if(m_mode == USBMonitor::Mode::HOTPLUG_DETECTION) {
+        libusb_handle_events(m_ctx);
+      } else {
+        auto previous = m_devices;
+        auto next     = ListConnectedDevices();
+        std::vector<USBDevice> difference;
+
+        if(previous.size() != next.size()) {
+          std::set_difference(previous.begin(), previous.end(), next.begin(), next.end(), std::inserter(difference, difference.begin()));
+          if(previous.size() > next.size()) {
+            for(auto disconnected : difference) {
+              for(auto subscriber : m_subscribers) {
+                subscriber->OnDeviceDisconnected(disconnected);
+              }
+            }
+          } else {
+            for(auto connected : difference) {
+              for(auto subscriber : m_subscribers) {
+                subscriber->OnDeviceConnected(connected);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
