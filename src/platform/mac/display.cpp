@@ -15,15 +15,16 @@ namespace kvm {
         CGDirectDisplayID ids[MAX_DISPLAYS];
         uint32_t returned;
         auto error = CGGetOnlineDisplayList(MAX_DISPLAYS, ids, &returned);
-
+        Display::Index index = 0;
         if(error == 0) {
             for(int i = 0; i < returned; i++) {
                 if(CGDisplayIsBuiltin(ids[i])) {
                     continue;
                 }
+                PlatformDisplay display{id: ids[i]};
 
                 CFStringRef name;
-                io_connect_t servicePort = DDC::IOServicePortFromCGDisplayID(ids[i], DDC::ServicePortType::IO_CONNECT);
+                io_connect_t servicePort = DDC::IOServicePortFromPlatformDisplay(display, DDC::ServicePortType::IO_CONNECT);
                 CFDictionaryRef info = IODisplayCreateInfoDictionary(servicePort, 0);
                 IOObjectRelease(servicePort);
 
@@ -33,12 +34,12 @@ namespace kvm {
                     CFStringGetCString(name, temp, MAX_DISPLAY_NAME_LENGTH, kCFStringEncodingASCII);
                     Display::Input input = Display::Input::UNKNOWN;
                     uint8_t currentValue;
-                    if(DDC::GetControlValue(ids[i], INPUT_SOURCE, currentValue)) {
-                        std::cout << "Input Value: " << currentValue << std::endl;
+                    if(DDC::GetControlValue(display, INPUT_SOURCE, currentValue)) {
                         input = static_cast<Display::Input>(currentValue);
                     }
 
-                    list.push_back(Display(ids[i], temp, input));
+                    list.push_back(Display(display, index, temp, input));
+                    index++;
                 }
                 CFRelease(info);
             }
@@ -49,7 +50,7 @@ namespace kvm {
 
     Display::Input Display::GetInput() {
         uint8_t input;
-        if(DDC::GetControlValue(m_id, INPUT_SOURCE, input)) {
+        if(DDC::GetControlValue(m_display, INPUT_SOURCE, input)) {
             m_input = static_cast<Display::Input>(input);
         } else {
             m_input = Display::Input::UNKNOWN;
@@ -62,7 +63,7 @@ namespace kvm {
             return true;
         }
 
-        if(DDC::SetControlValue(m_id, INPUT_SOURCE, static_cast<uint8_t>(input))) {
+        if(DDC::SetControlValue(m_display, INPUT_SOURCE, static_cast<uint8_t>(input))) {
             m_input = input;
             return true;
         }

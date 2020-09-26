@@ -1,5 +1,5 @@
 #include <networking/buffer.h>
-#include <kvm.h>
+#include <core/core.h>
 #include <cstring>
 
 #define MAX_STRING_LENGTH 1024

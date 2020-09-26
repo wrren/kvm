@@ -4,7 +4,7 @@
 #include <networking/message.h>
 #include <networking/message/types.h>
 #include <display/display.h>
-#include <kvm.h>
+#include <core/core.h>
 #include <map>
 
 namespace kvm {

@@ -6,13 +6,10 @@
 #include <platform/types.h>
 
 namespace kvm {
-    struct DisplayID;
-
     class Display {
     public:
-        typedef struct DisplayID* ID;
-        typedef uint8_t Index;
-        typedef std::vector<Display> List;
+        typedef uint8_t                     Index;
+        typedef std::vector<Display>        List;
 
         enum class Input : uint8_t {
             UNKNOWN = 0,
@@ -29,17 +26,12 @@ namespace kvm {
         /**
          * Initialize a Display object with the given ID, name and current input.
          */
-        Display(ID id, Index index, const std::string& name, Input input = Input::UNKNOWN);
+        Display(const PlatformDisplay& display, Index index, const std::string& name, Input input = Input::UNKNOWN);
 
         /**
          * Get this display's index.
          */
         Index GetIndex() const;
-
-        /**
-         * Get this display's unique ID
-         */
-        ID GetID() const;
 
         /**
          * Get the name of this display.
@@ -62,6 +54,11 @@ namespace kvm {
         bool SetInput(Input input);
 
         /**
+         * Get the Platform Display identifier
+         */
+        const PlatformDisplay& GetPlatformDisplay() const;
+
+        /**
          * List connected displays.
          */
         static List ListDisplays();
@@ -74,7 +71,7 @@ namespace kvm {
     private:
 
         /// Display ID
-        ID m_id;
+        PlatformDisplay m_display;
         /// Display Index
         Index m_index;
         /// Display Name

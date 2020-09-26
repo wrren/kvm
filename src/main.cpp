@@ -3,6 +3,24 @@
 #include <usb/monitor.h>
 #include <display/display.h>
 
+enum class RunMode {
+  WATCH,
+  LIST_DEVICES
+};
+
+typedef struct {
+  RunMode                   mode;
+  kvm::USBDevice::VendorID  vendor;
+  kvm::USBDevice::ProductID product;
+  kvm::Display::Input       input;
+} KVMOptions;
+
+bool ParseOptions(int argc, char** argv, KVMOptions& options) {
+
+
+  return false;
+}
+
 int main(int argc, char** argv) {
   kvm::USBMonitor monitor;
 
@@ -21,8 +39,6 @@ int main(int argc, char** argv) {
   for(auto display : displays) {
     std::cout << display.GetName() << ", Input: " << display.GetInputAsString() << std::endl;
   }
-
-  displays[0].SetInput(kvm::Display::Input::HDMI1);
 
   while(true) {
     monitor.CheckForDeviceEvents();

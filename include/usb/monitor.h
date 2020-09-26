@@ -1,14 +1,13 @@
 #ifndef KVM_USB_MONITOR_H
 #define KVM_USB_MONITOR_H
 
-#include <kvm.h>
+#include <core/core.h>
 #include <usb/device.h>
 #include <vector>
 #include <optional>
 #include <string>
 #include <mutex>
-
-struct libusb_context;
+#include <platform/types.h>
 
 namespace kvm {
   /**
@@ -28,10 +27,6 @@ namespace kvm {
        * Called when a USB device is disconnected from this computer.
        */
       virtual void OnDeviceDisconnected(const kvm::USBDevice& device) = 0;
-    };
-
-    enum DeviceConversionError {
-      DEVICE_OPEN_FAILURE
     };
 
     /**
@@ -77,17 +72,10 @@ namespace kvm {
 
   private:
 
-    enum class Mode {
-      HOTPLUG_DETECTION,
-      DEVICE_POLLING
-    };
-
-    /// Device attach/detach detection mode.
-    Mode m_mode;
+    /// Platform USB Context
+    PlatformUSB m_usb;
     /// Device event subscribers
     std::vector<Subscriber*> m_subscribers;
-    /// LibUSB Context
-    libusb_context* m_ctx;
     /// Connected Devices
     std::vector<USBDevice> m_devices;
     /// Controls access to the device list from other threads

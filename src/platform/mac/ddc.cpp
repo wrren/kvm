@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 namespace kvm {
-    dispatch_semaphore_t GetDisplayQueue(DisplayID display) {
+    dispatch_semaphore_t GetDisplayQueue(const PlatformDisplay& display) {
         static UInt64 queueCount = 0;
         static struct DDCQueue {CGDirectDisplayID id; dispatch_semaphore_t queue;} *queues = NULL;
         dispatch_semaphore_t queue = NULL;
@@ -24,18 +24,18 @@ namespace kvm {
             queues = (DDCQueue*) calloc(50, sizeof(*queues));
         UInt64 i = 0;
         while (i < queueCount)
-            if (queues[i].id == display)
+            if (queues[i].id == display.id)
                 break;
             else
                 i++;
-        if (queues[i].id == display)
+        if (queues[i].id == display.id)
             queue = queues[i].queue;
         else
-            queues[queueCount++] = (struct DDCQueue){display, (queue = dispatch_semaphore_create(1))};
+            queues[queueCount++] = (struct DDCQueue){display.id, (queue = dispatch_semaphore_create(1))};
         return queue;
     }
 
-    io_service_t DDC::IOServicePortFromCGDisplayID(DisplayID id, DDC::ServicePortType type) {
+    io_service_t DDC::IOServicePortFromPlatformDisplay(const PlatformDisplay& display, DDC::ServicePortType type) {
         io_iterator_t iterator;
         io_service_t servicePort, match = 0;
 
@@ -78,9 +78,9 @@ namespace kvm {
                 CFNumberGetValue(serialNumberRef, kCFNumberSInt32Type, &serialNumber);
             }
 
-            if( CGDisplayVendorNumber(id) != vendorID ||
-                CGDisplayModelNumber(id)  != productID ||
-                CGDisplaySerialNumber(id) != serialNumber )
+            if( CGDisplayVendorNumber(display.id) != vendorID ||
+                CGDisplayModelNumber(display.id)  != productID ||
+                CGDisplaySerialNumber(display.id) != serialNumber )
             {
                 CFRelease(displayInfo);
                 IOObjectRelease(servicePort);
@@ -97,13 +97,13 @@ namespace kvm {
         return match;
     }
 
-    bool SendRequestToDisplay(IOI2CRequest* request, DisplayID display) {
+    bool SendRequestToDisplay(IOI2CRequest* request, const PlatformDisplay& display) {
         dispatch_semaphore_t queue = GetDisplayQueue(display);
         dispatch_semaphore_wait(queue, DISPATCH_TIME_FOREVER);
         bool result = false;
         io_service_t framebuffer; 
 
-        if ((framebuffer = DDC::IOServicePortFromCGDisplayID(display, DDC::ServicePortType::FRAMEBUFFER))) {
+        if ((framebuffer = DDC::IOServicePortFromPlatformDisplay(display, DDC::ServicePortType::FRAMEBUFFER))) {
             IOItemCount busCount;
             if (IOFBGetI2CInterfaceCount(framebuffer, &busCount) == KERN_SUCCESS) {
                 IOOptionBits bus = 0;
@@ -189,7 +189,7 @@ namespace kvm {
         return supportedType;
     }
 
-    bool DDC::Write(DisplayID display, const DDC::WriteCommand& command) {
+    bool DDC::Write(const PlatformDisplay& display, const DDC::WriteCommand& command) {
         IOI2CRequest request;
         bzero(&request, sizeof(request));
         uint8_t payload[128];
@@ -214,7 +214,7 @@ namespace kvm {
         return SendRequestToDisplay(&request, display);
     }
 
-    bool DDC::Read(DisplayID display, DDC::ReadCommand& command) {
+    bool DDC::Read(const PlatformDisplay& display, DDC::ReadCommand& command) {
         IOI2CRequest request;
         UInt8 reply_data[11] = {};
         bool result = false;
@@ -285,7 +285,7 @@ namespace kvm {
         return true;
     }
 
-    bool DDC::GetControlValue(DisplayID display, uint8_t controlID, uint8_t& currentValue) {
+    bool DDC::GetControlValue(const PlatformDisplay& display, uint8_t controlID, uint8_t& currentValue) {
         ReadCommand command;
         command.controlID       = controlID;
         command.maxValue        = 0;
@@ -298,7 +298,7 @@ namespace kvm {
         return true;
     }
 
-    bool DDC::SetControlValue(DisplayID display, uint8_t controlID, uint8_t newValue) {
+    bool DDC::SetControlValue(const PlatformDisplay& display, uint8_t controlID, uint8_t newValue) {
         WriteCommand command;
         command.controlID       = controlID;
         command.newValue        = newValue;

@@ -32,27 +32,27 @@ namespace kvm {
         /**
          * Get the IO Service Port that corresponds with the given display ID and port type.
          */
-        static io_service_t IOServicePortFromCGDisplayID(DisplayID id, ServicePortType type);
+        static io_service_t IOServicePortFromPlatformDisplay(const PlatformDisplay& display, ServicePortType type);
 
         /**
          * Send a read command to the given display.
          */
-        static bool Read(DisplayID display, ReadCommand& command);
+        static bool Read(const PlatformDisplay& display, ReadCommand& command);
 
         /**
          * Send a write command to the given display.
          */
-        static bool Write(DisplayID display, const WriteCommand& command);
+        static bool Write(const PlatformDisplay& display, const WriteCommand& command);
 
         /**
          * Get the current value for the given control.
          */
-        static bool GetControlValue(DisplayID display, uint8_t controlID, uint8_t& currentValue);
+        static bool GetControlValue(const PlatformDisplay& display, uint8_t controlID, uint8_t& currentValue);
 
         /**
          * Set a new value for the given control.
          */
-        static bool SetControlValue(DisplayID display, uint8_t controlID, uint8_t newValue);
+        static bool SetControlValue(const PlatformDisplay& display, uint8_t controlID, uint8_t newValue);
     };
 }
 
