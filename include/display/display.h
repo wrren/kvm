@@ -11,6 +11,8 @@ namespace kvm {
         typedef uint8_t                     Index;
         typedef std::vector<Display>        List;
 
+        static const uint8_t InputVPCCode;
+
         enum class Input : uint8_t {
             UNKNOWN = 0,
             VGA1    = 1,

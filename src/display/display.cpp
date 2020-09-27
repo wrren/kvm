@@ -1,6 +1,8 @@
 #include <display/display.h>
 
 namespace kvm {
+    const uint8_t Display::InputVPCCode = 0x60;
+
     Display::Display(const PlatformDisplay& display, Display::Index index, const std::string& name, Display::Input input) :
     m_display(display),
     m_index(index),

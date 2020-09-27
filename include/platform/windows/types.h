@@ -4,9 +4,13 @@
 #include <winsock2.h>
 
 namespace kvm {
-  struct DisplayID {
-    HANDLE handle;
-  };
+  typedef struct {
+    HMONITOR handle;
+  } PlatformDisplay;
+
+  typedef struct {
+
+  } PlatformUSB;
 
   typedef SOCKET SocketID;
   typedef struct sockaddr_in  SocketAddress;

@@ -6,7 +6,6 @@
 
 #define MAX_DISPLAYS 64
 #define MAX_DISPLAY_NAME_LENGTH 128
-#define INPUT_SOURCE 0x60
 
 namespace kvm {
     Display::List Display::ListDisplays() {
@@ -34,7 +33,7 @@ namespace kvm {
                     CFStringGetCString(name, temp, MAX_DISPLAY_NAME_LENGTH, kCFStringEncodingASCII);
                     Display::Input input = Display::Input::UNKNOWN;
                     uint8_t currentValue;
-                    if(DDC::GetControlValue(display, INPUT_SOURCE, currentValue)) {
+                    if(DDC::GetControlValue(display, Display::InputVPCCode, currentValue)) {
                         input = static_cast<Display::Input>(currentValue);
                     }
 
@@ -50,7 +49,7 @@ namespace kvm {
 
     Display::Input Display::GetInput() {
         uint8_t input;
-        if(DDC::GetControlValue(m_display, INPUT_SOURCE, input)) {
+        if(DDC::GetControlValue(m_display, Display::InputVPCCode, input)) {
             m_input = static_cast<Display::Input>(input);
         } else {
             m_input = Display::Input::UNKNOWN;
@@ -63,7 +62,7 @@ namespace kvm {
             return true;
         }
 
-        if(DDC::SetControlValue(m_display, INPUT_SOURCE, static_cast<uint8_t>(input))) {
+        if(DDC::SetControlValue(m_display, Display::InputVPCCode, static_cast<uint8_t>(input))) {
             m_input = input;
             return true;
         }

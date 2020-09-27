@@ -3,6 +3,7 @@
 
 #include <core/core.h>
 #include <display/display.h>
+#include <usb/monitor.h>
 #include <usb/device.h>
 
 namespace kvm {
