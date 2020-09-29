@@ -40,9 +40,5 @@ int main(int argc, char** argv) {
     std::cout << display.GetName() << ", Input: " << display.GetInputAsString() << std::endl;
   }
 
-  while(true) {
-    monitor.CheckForDeviceEvents();
-  }
-
   return EXIT_SUCCESS;
 }

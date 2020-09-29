@@ -7,7 +7,7 @@ add_requires("catch2")
 target("kvm")
   set_kind("binary")
   set_languages("cxx17")
-  add_files("src/*.cpp", "src/usb/**.cpp", "src/display/**.cpp", "src/networking/**.cpp")
+  add_files("src/*.cpp", "src/core/**.cpp", "src/usb/**.cpp", "src/display/**.cpp", "src/networking/**.cpp")
   add_includedirs("$(projectdir)/include")
   add_rules("mode.debug")
 
@@ -16,8 +16,8 @@ target("kvm")
     add_includedirs("$(projectdir)/deps/libusb/include/libusb-1.0")
     add_linkdirs("deps/libusb/MS64/dll")
     add_links("libusb-1.0")
-    add_defines("KVM_OS_WINDOWS")
-    add_syslinks("gdi32", "msimg32", "user32", "Dxva2")
+    add_defines("KVM_OS_WINDOWS", "UNICODE")
+    add_syslinks("gdi32", "msimg32", "user32", "Dxva2", "Setupapi")
   end
 
   if is_os("linux") then

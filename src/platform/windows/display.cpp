@@ -1,3 +1,4 @@
+#include <core/string.h>
 #include <display/display.h>
 #include <platform/types.h>
 #include <iostream>
@@ -13,7 +14,7 @@ namespace kvm {
     info.cbSize = sizeof(MONITORINFOEX);
 
     if(GetMonitorInfo(monitor, &info)) {
-      std::string name(static_cast<char*>(info.szDevice));
+      std::string name(WideStringToString(static_cast<wchar_t*>(info.szDevice)));
       PlatformDisplay platform = { monitor };
       Display display(platform, displays->size(), name, Display::Input::UNKNOWN);
       displays->push_back(display);
