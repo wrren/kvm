@@ -70,6 +70,12 @@ namespace kvm {
          */
         static std::string InputToString(Input input);
 
+        /**
+         * Convert a string value to a valid Input value. Returns UNKNOWN
+         * on failure.
+         */
+        static Input StringToInput(const std::string& string);
+
     private:
 
         /// Display ID

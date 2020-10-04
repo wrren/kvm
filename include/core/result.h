@@ -11,6 +11,9 @@ namespace kvm {
     class Result {
     public:
 
+        Result()
+        {}
+
         Result(const Value& value) :
         m_variant(value)
         {}
@@ -47,6 +50,13 @@ namespace kvm {
          */
         const Error& GetError() const {
             return std::get<Error>(m_variant);
+        }
+
+        Result<Value, Error>& operator=(const Value& value) {
+            m_variant = value;
+        }
+        Result<Value, Error>& operator=(const Error& value) {
+            m_variant = value;
         }
 
     private:
