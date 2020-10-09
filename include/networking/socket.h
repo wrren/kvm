@@ -4,6 +4,7 @@
 #include <kvm.h>
 #include <optional>
 #include <string>
+#include <platform/types.h>
 
 namespace kvm {
     class Socket {
@@ -65,7 +66,7 @@ namespace kvm {
     private:
 
         /// Socket Handle
-        SocketID m_socket;
+        PlatformSocket m_socket;
         /// Current Socket State
         SocketState m_state;
     };

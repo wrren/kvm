@@ -4,11 +4,10 @@
 namespace kvm {
     const uint8_t Display::InputVPCCode = 0x60;
 
-    Display::Display(const PlatformDisplay& display, Display::Index index, const std::string& name, Display::Input input) :
+    Display::Display(const PlatformDisplay& display, Display::Index index, const std::string& name) :
     m_display(display),
     m_index(index),
-    m_name(name),
-    m_input(input)
+    m_name(name)
     {}
 
     const std::string& Display::GetName() const {
@@ -16,7 +15,7 @@ namespace kvm {
     }
 
     std::string Display::GetInputAsString() const {
-        return Display::InputToString(m_input);
+        return Display::InputToString(GetInput());
     }
 
     std::string Display::InputToString(Display::Input input) {
@@ -27,6 +26,8 @@ namespace kvm {
             case Display::Input::DVI2:      return "DVI 2";
             case Display::Input::DP1:       return "DP 1";
             case Display::Input::DP2:       return "DP 2";
+            case Display::Input::HDMI1:     return "HDMI 1";
+            case Display::Input::HDMI2:     return "HDMI 2";
             default:
                 return "Unknown";
         }

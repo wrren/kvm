@@ -31,13 +31,7 @@ namespace kvm {
                 if(names && CFDictionaryGetValueIfPresent(names, CFSTR("en_US"), (const void**) &name)) {
                     char temp[MAX_DISPLAY_NAME_LENGTH];
                     CFStringGetCString(name, temp, MAX_DISPLAY_NAME_LENGTH, kCFStringEncodingASCII);
-                    Display::Input input = Display::Input::UNKNOWN;
-                    uint8_t currentValue;
-                    if(DDC::GetControlValue(display, Display::InputVPCCode, currentValue)) {
-                        input = static_cast<Display::Input>(currentValue);
-                    }
-
-                    list.push_back(Display(display, index, temp, input));
+                    list.push_back(Display(display, index, temp));
                     index++;
                 }
                 CFRelease(info);
@@ -47,23 +41,21 @@ namespace kvm {
         return list;
     }
 
-    Display::Input Display::GetInput() {
+    Display::Input Display::GetInput() const {
         uint8_t input;
         if(DDC::GetControlValue(m_display, Display::InputVPCCode, input)) {
-            m_input = static_cast<Display::Input>(input);
+            return static_cast<Display::Input>(input);
         } else {
-            m_input = Display::Input::UNKNOWN;
+            return Display::Input::UNKNOWN;
         }
-        return m_input;
     }
 
     bool Display::SetInput(Display::Input input) {
-        if(input == m_input) {
+        if(input == GetInput()) {
             return true;
         }
 
         if(DDC::SetControlValue(m_display, Display::InputVPCCode, static_cast<uint8_t>(input))) {
-            m_input = input;
             return true;
         }
 

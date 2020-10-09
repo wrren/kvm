@@ -26,9 +26,9 @@ namespace kvm {
         };
 
         /**
-         * Initialize a Display object with the given ID, name and current input.
+         * Initialize a Display object with the given ID and name.
          */
-        Display(const PlatformDisplay& display, Index index, const std::string& name, Input input = Input::UNKNOWN);
+        Display(const PlatformDisplay& display, Index index, const std::string& name);
 
         /**
          * Get this display's index.
@@ -43,7 +43,7 @@ namespace kvm {
         /**
          * Get the current input set for this display.
          */
-        Input GetInput();
+        Input GetInput() const;
 
         /**
          * Get the current input as a string.
@@ -84,8 +84,6 @@ namespace kvm {
         Index m_index;
         /// Display Name
         std::string m_name;
-        /// Current Input
-        Input m_input;
     };
 }
 
