@@ -2,14 +2,38 @@
 #include <display/display.h>
 #include <platform/types.h>
 #include <iostream>
+#include <initguid.h>
 #include <WinUser.h>
 #include <physicalmonitorenumerationapi.h>
 #include <lowlevelmonitorconfigurationapi.h>
 #include <SetupAPI.h>
+#include <tchar.h>
+#include <Ntddvdeo.h>
 
-const GUID GUID_CLASS_MONITOR = {0x4d36e96e, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18};
+#define NAME_SIZE 128
 
 namespace kvm {
+  bool GetDisplaySerialNumber(HKEY deviceRegistryKey, Display::SerialNumber& serial) {
+    DWORD dwType, requiredSize = NAME_SIZE;
+    TCHAR valueName[NAME_SIZE];
+ 
+    BYTE edidData[1024];
+    DWORD edidSize = sizeof(edidData);
+    Display::SerialNumber value;
+ 
+    for (LONG i = 0, retValue = ERROR_SUCCESS; retValue != ERROR_NO_MORE_ITEMS; ++i) {
+      if(RegEnumValue(deviceRegistryKey, i, &valueName[0], &requiredSize, NULL, &dwType, edidData, &edidSize) != ERROR_SUCCESS || wcscmp(valueName, L"EDID") != 0) {
+        continue;
+      }
+ 
+      memcpy(&value, &edidData[12], sizeof(Display::SerialNumber));
+      serial = value;
+      return true;
+    }
+
+    return false;
+  }
+
   BOOL MonitorEnumProc(HMONITOR monitor, HDC context, LPRECT clipping, LPARAM out) {
     Display::List* displays = reinterpret_cast<Display::List*>(out);
 
@@ -19,13 +43,52 @@ namespace kvm {
     if(GetMonitorInfo(monitor, &info)) {
       DISPLAY_DEVICE device;
       device.cb = sizeof(DISPLAY_DEVICE);
-      if(EnumDisplayDevices(info.szDevice, 0, &device, 0)) {
+      if(EnumDisplayDevices(info.szDevice, 0, &device, EDD_GET_DEVICE_INTERFACE_NAME)) {
         std::string name(WideStringToString(static_cast<wchar_t*>(device.DeviceID)));
         PlatformDisplay platform = { monitor, device };
-        Display display(platform, displays->size(), name);
-        displays->push_back(display);
+
+        HDEVINFO                          deviceInfoSet;
+        HKEY                              deviceRegistryKey;
+        SP_DEVINFO_DATA                   deviceInfoData;
+        SP_DEVICE_INTERFACE_DATA          deviceInterfaceData;
+        PSP_DEVICE_INTERFACE_DETAIL_DATA  deviceInterfaceDetailData;
+        ULONG                             index = 0;
+        Display::SerialNumber             serialNumber;
+        DWORD                             requiredSize = 0;
+
+        deviceInfoSet = SetupDiGetClassDevs(&GUID_DEVINTERFACE_MONITOR, NULL, NULL, DIGCF_DEVICEINTERFACE);
+
+        if(deviceInfoSet != NULL) {
+          for(index = 0; GetLastError() != ERROR_NO_MORE_ITEMS; index++) {
+            memset(&deviceInterfaceData, 0, sizeof(SP_DEVICE_INTERFACE_DATA));
+            deviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+
+            if(SetupDiEnumDeviceInterfaces(deviceInfoSet, NULL, &GUID_DEVINTERFACE_MONITOR, index, &deviceInterfaceData)) { 
+              if(!SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, NULL, 0, &requiredSize, NULL) && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+                deviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA) malloc(requiredSize);
+                memset(deviceInterfaceDetailData, 0, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
+                deviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+                if(SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, deviceInterfaceDetailData, requiredSize, &requiredSize, NULL)) {
+                  if(_wcsicmp(&(deviceInterfaceDetailData->DevicePath[0]), device.DeviceID) == 0) {
+                    memset(&deviceInfoData, 0, sizeof(SP_DEVINFO_DATA));
+                    deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+
+                    if(SetupDiEnumDeviceInfo(deviceInfoSet, index, &deviceInfoData)) {
+                      deviceRegistryKey = SetupDiOpenDevRegKey(deviceInfoSet, &deviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+
+                      if(deviceRegistryKey && GetDisplaySerialNumber(deviceRegistryKey, serialNumber)) {
+                        Display display(platform, serialNumber, name);
+                        displays->push_back(display);
+                      }
+                    }
+                  }
+                }
+                free(deviceInterfaceDetailData);
+              }
+            }            
+          }
+        }        
       }
-      
     }
 
     return TRUE;
@@ -35,48 +98,7 @@ namespace kvm {
     Display::List displays;
     EnumDisplayMonitors(nullptr, nullptr, MonitorEnumProc, reinterpret_cast<LPARAM>(&displays));
 
-    HDEVINFO          deviceInfoSet;
-    HKEY              deviceRegistryKey;
-    SP_DEVINFO_DATA   deviceInfoData;
-    ULONG             index = 0;
-    DWORD             uniqueID[123];
-
-    deviceInfoSet = SetupDiGetClassDevsEx(&GUID_CLASS_MONITOR, NULL, NULL, DIGCF_PRESENT, NULL, NULL, NULL);
-
-    if(deviceInfoSet != NULL) {
-      for(index = 0; GetLastError() != ERROR_NO_MORE_ITEMS; index++) {
-        memset(deviceInfoData, 0, sizeof(SP_DEVICE_INFO_DATA));
-        deviceInfoData.cbSize = sizeof(SP_DEVICE_INFO_DATA);
-
-        if(SetupDiEnumDeviceInfo(deviceInfoSet, index, &deviceInfoData)) {
-          DWORD uniqueID;
-          if(SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC, NULL, (PBYTE) &uniqueID, sizeof(uniqueID), NULL)) {
-            deviceRegistryKey = SetupDiOpenDevRegKey(deviceInfoSet, &deviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
-
-            if(deviceRegistryKey) {
-              unsigned char edidData[1024];
-              LONG          result = ERROR_SUCCESS;
-              ULONG         keyIndex = 0, edidIndex = 0;
-              DWORD         type, requiredSize, edidSize = sizeof(edidData);
-
-              for(keyIndex = 0; result != ERROR_NO_MORE_ITEMS; keyIndex++) {
-                char valueName[128];
-                char hex[3];
-
-                result = RegEnumValue(deviceRegistryKey, keyIndex, &valueName[0], &requiredSize, NULL, &type, edidData, &edidIndex);
-
-                if(result == ERROR_SUCCESS) {
-                  if(strcmp(valueName, "EDID") == 0) {
-                    
-                  }
-                }
-              }
-
-            }
-          }
-        }
-      }
-    }
+    
 
     return displays;
   }

@@ -20,15 +20,15 @@ namespace kvm {
         if(NetworkMessage::Deserialize(buffer)) {
             m_result.clear();
 
-            uint8_t     size;
-            uint8_t     index;
-            uint8_t     result;
+            uint8_t                 size;
+            Display::SerialNumber   serial;
+            uint8_t                 result;
 
             buffer >> size;
 
             for(int i = 0; i < size && buffer.GetState() == NetworkBuffer::State::OK; i++) {
-                buffer >> index >> result;
-                m_result[index] = static_cast<ChangeInputResponse::Result>(result);
+                buffer >> serial >> result;
+                m_result[serial] = static_cast<ChangeInputResponse::Result>(result);
             }
         }
 

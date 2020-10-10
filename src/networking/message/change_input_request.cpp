@@ -16,16 +16,16 @@ namespace kvm {
         if(NetworkMessage::Deserialize(buffer)) {
             m_map.clear();
 
-            uint8_t     size;
-            uint8_t     index;
-            uint8_t     input;
+            uint8_t                 size;
+            Display::SerialNumber   serial;
+            uint8_t                 input;
 
             buffer >> size;
 
             for(int i = 0; i < size && buffer.GetState() == NetworkBuffer::State::OK; i++) {
-                buffer >> index >> input;
+                buffer >> serial >> input;
                 if(buffer.GetState() == NetworkBuffer::State::OK) {
-                    m_map[index] = static_cast<Display::Input>(input);
+                    m_map[serial] = static_cast<Display::Input>(input);
                 }
             }
         }

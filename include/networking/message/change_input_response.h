@@ -17,7 +17,7 @@ namespace kvm {
             INPUT_SELECT_SUCCEEDED
         };
 
-        typedef std::map<Display::Index, Result> ResultMap;
+        typedef std::map<Display::SerialNumber, Result> ResultMap;
 
         /**
          * Default Constructor

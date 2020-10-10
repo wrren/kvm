@@ -4,14 +4,18 @@
 namespace kvm {
     const uint8_t Display::InputVPCCode = 0x60;
 
-    Display::Display(const PlatformDisplay& display, Display::Index index, const std::string& name) :
+    Display::Display(const PlatformDisplay& display, Display::SerialNumber serial, const std::string& name) :
     m_display(display),
-    m_index(index),
+    m_serial(serial),
     m_name(name)
     {}
 
     const std::string& Display::GetName() const {
         return m_name;
+    }
+
+    Display::SerialNumber Display::GetSerialNumber() const {
+        return m_serial;
     }
 
     std::string Display::GetInputAsString() const {

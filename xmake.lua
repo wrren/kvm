@@ -17,7 +17,7 @@ target("kvm")
     add_linkdirs("deps/libusb/MS64/dll")
     add_links("libusb-1.0")
     add_defines("KVM_OS_WINDOWS", "UNICODE")
-    add_syslinks("gdi32", "msimg32", "user32", "Dxva2", "Setupapi")
+    add_syslinks("gdi32", "msimg32", "user32", "Dxva2", "Setupapi", "Advapi32")
   end
 
   if is_os("linux") then

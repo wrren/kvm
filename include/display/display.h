@@ -8,8 +8,8 @@
 namespace kvm {
     class Display {
     public:
-        typedef uint8_t                     Index;
         typedef std::vector<Display>        List;
+        typedef uint32_t                    SerialNumber;
 
         static const uint8_t InputVPCCode;
 
@@ -26,14 +26,14 @@ namespace kvm {
         };
 
         /**
-         * Initialize a Display object with the given ID and name.
+         * Initialize a Display object with the given ID, serial number and name.
          */
-        Display(const PlatformDisplay& display, Index index, const std::string& name);
+        Display(const PlatformDisplay& display, SerialNumber serial, const std::string& name);
 
         /**
-         * Get this display's index.
+         * Get this display's serial number.
          */
-        Index GetIndex() const;
+        SerialNumber GetSerialNumber() const;
 
         /**
          * Get the name of this display.
@@ -80,8 +80,8 @@ namespace kvm {
 
         /// Display ID
         PlatformDisplay m_display;
-        /// Display Index
-        Index m_index;
+        /// Display Serial Number
+        SerialNumber m_serial;
         /// Display Name
         std::string m_name;
     };
