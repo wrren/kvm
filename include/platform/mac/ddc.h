@@ -2,6 +2,7 @@
 #define KVM_PLATFORM_DDC_MAC_H
 
 #include <display/display.h>
+#include <display/edid.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <IOKit/graphics/IOGraphicsLib.h>
 
@@ -53,6 +54,11 @@ namespace kvm {
          * Set a new value for the given control.
          */
         static bool SetControlValue(const PlatformDisplay& display, uint8_t controlID, uint8_t newValue);
+
+        /**
+         * Attempt to read the given display's EDID data
+         */
+        static bool ReadEDID(const PlatformDisplay& display, EDID& edid);
     };
 }
 

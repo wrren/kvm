@@ -1,5 +1,6 @@
 #include <core/string.h>
 #include <display/display.h>
+#include <display/edid.h>
 #include <platform/types.h>
 #include <iostream>
 #include <initguid.h>
@@ -13,21 +14,20 @@
 #define NAME_SIZE 128
 
 namespace kvm {
-  bool GetDisplaySerialNumber(HKEY deviceRegistryKey, Display::SerialNumber& serial) {
+  bool ReadEDID(HKEY deviceRegistryKey, EDID& edid) {
     DWORD dwType, requiredSize = NAME_SIZE;
     TCHAR valueName[NAME_SIZE];
  
     BYTE edidData[1024];
     DWORD edidSize = sizeof(edidData);
-    Display::SerialNumber value;
  
     for (LONG i = 0, retValue = ERROR_SUCCESS; retValue != ERROR_NO_MORE_ITEMS; ++i) {
       if(RegEnumValue(deviceRegistryKey, i, &valueName[0], &requiredSize, NULL, &dwType, edidData, &edidSize) != ERROR_SUCCESS || wcscmp(valueName, L"EDID") != 0) {
         continue;
       }
  
-      memcpy(&value, &edidData[12], sizeof(Display::SerialNumber));
-      serial = value;
+      edid.SetData(edidData, edidSize);
+
       return true;
     }
 
@@ -42,6 +42,7 @@ namespace kvm {
 
     if(GetMonitorInfo(monitor, &info)) {
       DISPLAY_DEVICE device;
+      EDID edid;
       device.cb = sizeof(DISPLAY_DEVICE);
       if(EnumDisplayDevices(info.szDevice, 0, &device, EDD_GET_DEVICE_INTERFACE_NAME)) {
         std::string name(WideStringToString(static_cast<wchar_t*>(device.DeviceID)));
@@ -53,7 +54,9 @@ namespace kvm {
         SP_DEVICE_INTERFACE_DATA          deviceInterfaceData;
         PSP_DEVICE_INTERFACE_DETAIL_DATA  deviceInterfaceDetailData;
         ULONG                             index = 0;
-        Display::SerialNumber             serialNumber;
+        Display::ManufacturerID           manufacturer;
+        Display::ProductID                product;
+        Display::SerialNumber             serial;
         DWORD                             requiredSize = 0;
 
         deviceInfoSet = SetupDiGetClassDevs(&GUID_DEVINTERFACE_MONITOR, NULL, NULL, DIGCF_DEVICEINTERFACE);
@@ -76,9 +79,12 @@ namespace kvm {
                     if(SetupDiEnumDeviceInfo(deviceInfoSet, index, &deviceInfoData)) {
                       deviceRegistryKey = SetupDiOpenDevRegKey(deviceInfoSet, &deviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
 
-                      if(deviceRegistryKey && GetDisplaySerialNumber(deviceRegistryKey, serialNumber)) {
-                        Display display(platform, serialNumber, name);
-                        displays->push_back(display);
+                      if(deviceRegistryKey && ReadEDID(deviceRegistryKey, edid)) {
+                        if(edid.GetProductID(product) && edid.GetSerialNumber(serial) && edid.GetManufacturerID(manufacturer)) {
+                          edid.GetDisplayName(name);
+                          Display display(platform, manufacturer, product, serial, name);
+                          displays->push_back(display);
+                        }                        
                       }
                     }
                   }

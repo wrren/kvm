@@ -9,6 +9,8 @@ namespace kvm {
     class Display {
     public:
         typedef std::vector<Display>        List;
+        typedef std::string                 ManufacturerID;
+        typedef uint16_t                    ProductID;
         typedef uint32_t                    SerialNumber;
 
         static const uint8_t InputVPCCode;
@@ -26,9 +28,19 @@ namespace kvm {
         };
 
         /**
-         * Initialize a Display object with the given ID, serial number and name.
+         * Initialize a Display object with the given platform display structure, manufacturer ID, product ID, serial number and name.
          */
-        Display(const PlatformDisplay& display, SerialNumber serial, const std::string& name);
+        Display(const PlatformDisplay& display, ManufacturerID manufacturer, ProductID product, SerialNumber serial, const std::string& name);
+
+        /**
+         * Get this display's manufacturer ID
+         */
+        const ManufacturerID& GetManufacturerID() const;
+
+        /**
+         * Get this display's product ID
+         */
+        ProductID GetProductID() const;
 
         /**
          * Get this display's serial number.
@@ -78,8 +90,12 @@ namespace kvm {
 
     private:
 
-        /// Display ID
+        /// Platform-specific Display Data
         PlatformDisplay m_display;
+        /// Manufacturer ID
+        ManufacturerID m_manufacturer;
+        /// Product ID
+        ProductID m_product;
         /// Display Serial Number
         SerialNumber m_serial;
         /// Display Name

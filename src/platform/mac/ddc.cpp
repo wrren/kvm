@@ -305,4 +305,36 @@ namespace kvm {
 
         return DDC::Write(display, command);
     }
+
+    bool DDC::ReadEDID(const PlatformDisplay& display, EDID& edid) {
+        IOI2CRequest request = {};
+        UInt8 data[128] = {};
+        request.sendAddress = 0xA0;
+        request.sendTransactionType = kIOI2CSimpleTransactionType;
+        request.sendBuffer = (vm_address_t) data;
+        request.sendBytes = 0x01;
+        data[0] = 0x00;
+        request.replyAddress = 0xA1;
+        request.replyTransactionType = kIOI2CSimpleTransactionType;
+        request.replyBuffer = (vm_address_t) data;
+        request.replyBytes = sizeof(data);
+        if(!SendRequestToDisplay(&request, display)) {
+            return false;
+        }
+        UInt32 i = 0;
+        UInt8 sum = 0;
+        while (i < request.replyBytes) {
+            if (i % 128 == 0) {
+                if (sum) break;
+                sum = 0;
+            }
+            sum += data[i++];
+        }
+        
+        if(!sum) {
+            edid.SetData(data, 128);
+        }
+
+        return !sum;
+    }
 }

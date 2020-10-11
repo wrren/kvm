@@ -4,14 +4,24 @@
 namespace kvm {
     const uint8_t Display::InputVPCCode = 0x60;
 
-    Display::Display(const PlatformDisplay& display, Display::SerialNumber serial, const std::string& name) :
+    Display::Display(const PlatformDisplay& display, Display::ManufacturerID manufacturer, Display::ProductID product, Display::SerialNumber serial, const std::string& name) :
     m_display(display),
+    m_manufacturer(manufacturer),
+    m_product(product),
     m_serial(serial),
     m_name(name)
     {}
 
     const std::string& Display::GetName() const {
         return m_name;
+    }
+
+    const Display::ManufacturerID& Display::GetManufacturerID() const {
+        return m_manufacturer;
+    }
+
+    Display::ProductID Display::GetProductID() const {
+        return m_product;
     }
 
     Display::SerialNumber Display::GetSerialNumber() const {

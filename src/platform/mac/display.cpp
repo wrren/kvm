@@ -1,4 +1,5 @@
 #include <display/display.h>
+#include <display/edid.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <IOKit/graphics/IOGraphicsLib.h>
 #include <platform/mac/ddc.h>
@@ -21,20 +22,15 @@ namespace kvm {
                     continue;
                 }
                 PlatformDisplay display{id: ids[i]};
-
-                CFStringRef name;
-                io_connect_t servicePort = DDC::IOServicePortFromPlatformDisplay(display, DDC::ServicePortType::IO_CONNECT);
-                CFDictionaryRef info = IODisplayCreateInfoDictionary(servicePort, 0);
-                IOObjectRelease(servicePort);
-
-                CFDictionaryRef names = (CFDictionaryRef) CFDictionaryGetValue(info, CFSTR(kDisplayProductName));
-                if(names && CFDictionaryGetValueIfPresent(names, CFSTR("en_US"), (const void**) &name)) {
-                    char temp[MAX_DISPLAY_NAME_LENGTH];
-                    CFStringGetCString(name, temp, MAX_DISPLAY_NAME_LENGTH, kCFStringEncodingASCII);
-                    list.push_back(Display(display, index, temp));
-                    index++;
+                EDID edid;
+                Display::ManufacturerID     manufacturer;
+                Display::ProductID          product;
+                Display::SerialNumber       serial;
+                std::string                 name;
+                
+                if(DDC::ReadEDID(display, edid) && edid.GetManufacturerID(manufacturer) && edid.GetProductID(product) && edid.GetSerialNumber(serial) && edid.GetDisplayName(name)) {
+                    list.push_back(Display(display, manufacturer, product, serial, name));
                 }
-                CFRelease(info);
             }
         }
 
