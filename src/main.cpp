@@ -145,6 +145,11 @@ int main(int argc, char** argv) {
         std::cout << "Prefer Input " << kvm::Display::InputToString(input.second) << " For Display " << input.first.GetName() << " (" << input.first.GetSerialNumber() << ")" << std::endl;
       }
 
+      for(auto node : options.nodes) {
+        std::cout << "Adding Node " << node << std::endl;
+        kvm.AddNode(node, options.port);
+      }
+
       while(true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         kvm.Pump();
