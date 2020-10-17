@@ -1,4 +1,5 @@
 #include <networking/buffer.h>
+#include <networking/serializable.h>
 #include <core/core.h>
 #include <cstring>
 
@@ -30,90 +31,119 @@ namespace kvm {
         return m_offset;
     }
 
+    NetworkBuffer::Buffer NetworkBuffer::GetBuffer() const {
+        return m_buffer;
+    }
+
     NetworkBuffer& NetworkBuffer::Reset() {
         m_state     = NetworkBuffer::State::OK;
         m_offset    = 0;
         return *this;
     }
+    NetworkBuffer& NetworkBuffer::Reset(NetworkBuffer::Buffer buffer, NetworkBuffer::BufferSize bufferSize) {
+        m_state     = NetworkBuffer::State::OK;
+        m_offset    = 0;
 
-    NetworkBuffer& operator>>(NetworkBuffer& message, uint8_t& value) {
-        return message.Deserialize(&value, sizeof(value));
+        if(m_buffer != nullptr) {
+            delete[] m_buffer;
+        }
+
+        if(bufferSize > 0) {
+            m_buffer = new uint8_t[bufferSize];
+            m_length = bufferSize;
+            memcpy(m_buffer, buffer, bufferSize);
+        }
+        
+        return *this;
     }
-    NetworkBuffer& operator>>(NetworkBuffer& message, int8_t& value) {
-        return message.Deserialize(&value, sizeof(value));
+
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, uint8_t& value) {
+        return buffer.Deserialize(&value, sizeof(value));
     }
-    NetworkBuffer& operator>>(NetworkBuffer& message, uint16_t& value) {
-        message.Deserialize(&value, sizeof(value));
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, int8_t& value) {
+        return buffer.Deserialize(&value, sizeof(value));
+    }
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, uint16_t& value) {
+        buffer.Deserialize(&value, sizeof(value));
         value = NetworkToHost(value);
-        return message;
+        return buffer;
     }
-    NetworkBuffer& operator>>(NetworkBuffer& message, int16_t& value) {
-        message.Deserialize(&value, sizeof(value));
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, int16_t& value) {
+        buffer.Deserialize(&value, sizeof(value));
         value = NetworkToHost(value);
-        return message;
+        return buffer;
     }
-    NetworkBuffer& operator>>(NetworkBuffer& message, uint32_t& value) {
-        message.Deserialize(&value, sizeof(value));
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, uint32_t& value) {
+        buffer.Deserialize(&value, sizeof(value));
         value = NetworkToHost(value);
-        return message;
+        return buffer;
     }
-    NetworkBuffer& operator>>(NetworkBuffer& message, int32_t& value) {
-        message.Deserialize(&value, sizeof(value));
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, int32_t& value) {
+        buffer.Deserialize(&value, sizeof(value));
         value = NetworkToHost(value);
-        return message;
+        return buffer;
     }
-    NetworkBuffer& operator>>(NetworkBuffer& message, bool& value) {
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, bool& value) {
         uint8_t b;
-        message >> b;
+        buffer >> b;
         value = b;
-        return message;
+        return buffer;
     }
-    NetworkBuffer& operator>>(NetworkBuffer& message, std::string& value) {
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, std::string& value) {
         uint32_t length;
-        message >> length;
-        if(message.GetState() == NetworkBuffer::State::OK && length <= MAX_STRING_LENGTH) {
+        buffer >> length;
+        if(buffer.GetState() == NetworkBuffer::State::OK && length <= MAX_STRING_LENGTH) {
             char* str = new char[length];
-            message.Deserialize(str, length);
+            buffer.Deserialize(str, length);
             value.assign(str, length);
         } else {
-            message.m_state = NetworkBuffer::State::ERROR_OVERFLOW;
+            buffer.m_state = NetworkBuffer::State::ERROR_OVERFLOW;
         }
-        return message;
+        return buffer;
+    }
+    NetworkBuffer& operator>>(NetworkBuffer& buffer, Serializable& value) {
+        value.Deserialize(buffer);
+        return buffer;
     }
 
-    NetworkBuffer& operator<<(NetworkBuffer& message, uint8_t value) {
-        return message.Serialize(&value, sizeof(value));
+
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, uint8_t value) {
+        return buffer.Serialize(&value, sizeof(value));
     }
-    NetworkBuffer& operator<<(NetworkBuffer& message, int8_t value) {
-        return message.Serialize(&value, sizeof(value));
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, int8_t value) {
+        return buffer.Serialize(&value, sizeof(value));
     }
-    NetworkBuffer& operator<<(NetworkBuffer& message, uint16_t value) {
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, uint16_t value) {
         auto swapped = HostToNetwork(value);
-        return message.Serialize(&swapped, sizeof(swapped));
+        return buffer.Serialize(&swapped, sizeof(swapped));
     }
-    NetworkBuffer& operator<<(NetworkBuffer& message, int16_t value) {
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, int16_t value) {
         auto swapped = HostToNetwork(value);
-        return message.Serialize(&swapped, sizeof(swapped));
+        return buffer.Serialize(&swapped, sizeof(swapped));
     }
-    NetworkBuffer& operator<<(NetworkBuffer& message, uint32_t value) {
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, uint32_t value) {
         auto swapped = HostToNetwork(value);
-        return message.Serialize(&swapped, sizeof(swapped));
+        return buffer.Serialize(&swapped, sizeof(swapped));
     }
-    NetworkBuffer& operator<<(NetworkBuffer& message, int32_t value) {
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, int32_t value) {
         auto swapped = HostToNetwork(value);
-        return message.Serialize(&swapped, sizeof(swapped));
+        return buffer.Serialize(&swapped, sizeof(swapped));
     }
-    NetworkBuffer& operator<<(NetworkBuffer& message, bool value) {
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, bool value) {
         auto swapped = HostToNetwork(static_cast<uint8_t>(value));
-        return message.Serialize(&swapped, sizeof(swapped));
+        return buffer.Serialize(&swapped, sizeof(swapped));
     }
-    NetworkBuffer& operator<<(NetworkBuffer& message, const std::string& value) {
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, const std::string& value) {
         if(value.length() <= MAX_STRING_LENGTH) {
-            message << static_cast<uint32_t>(value.length());
-            return message.Serialize(reinterpret_cast<const void*>(value.c_str()), value.length());
+            buffer << static_cast<uint32_t>(value.length());
+            return buffer.Serialize(reinterpret_cast<const void*>(value.c_str()), value.length());
         } else {
-            message.m_state = NetworkBuffer::State::ERROR_OVERFLOW;
+            buffer.m_state = NetworkBuffer::State::ERROR_OVERFLOW;
         }     
+    }
+    NetworkBuffer& operator<<(NetworkBuffer& buffer, const Serializable& value) {
+        value.Serialize(buffer);
+        return buffer;    
     }
 
     NetworkBuffer& NetworkBuffer::Deserialize(void* out, NetworkBuffer::BufferSize size) {
@@ -138,6 +168,10 @@ namespace kvm {
             }
         }
         return *this;
+    }
+
+    NetworkBuffer::operator bool() const {
+        return m_state == NetworkBuffer::State::OK;
     }
 
     NetworkBuffer::~NetworkBuffer() {

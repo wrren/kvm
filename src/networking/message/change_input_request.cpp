@@ -3,7 +3,7 @@
 #include <kvm.h>
 
 namespace kvm {
-    ChangeInputRequest::ChangeInputRequest(const ChangeInputRequest::InputMap& map) :
+    ChangeInputRequest::ChangeInputRequest(const Display::InputMap& map) :
     NetworkMessage(static_cast<NetworkMessage::Type>(NetworkMessageType::CHANGE_INPUT_REQUEST)),
     m_map(map)
     {}
@@ -12,25 +12,29 @@ namespace kvm {
     NetworkMessage(static_cast<NetworkMessage::Type>(NetworkMessageType::CHANGE_INPUT_REQUEST))
     {}
 
+    const Display::InputMap& ChangeInputRequest::GetInputMap() const {
+        return m_map;
+    }
+
     bool ChangeInputRequest::Deserialize(NetworkBuffer& buffer) {
         if(NetworkMessage::Deserialize(buffer)) {
             m_map.clear();
 
-            uint8_t                 size;
-            Display::SerialNumber   serial;
-            uint8_t                 input;
+            uint8_t size;
+            Display display;
+            uint8_t input;
 
             buffer >> size;
 
-            for(int i = 0; i < size && buffer.GetState() == NetworkBuffer::State::OK; i++) {
-                buffer >> serial >> input;
-                if(buffer.GetState() == NetworkBuffer::State::OK) {
-                    m_map[serial] = static_cast<Display::Input>(input);
+            for(int i = 0; i < size && buffer; i++) {
+                buffer >> display >> input;
+                if(buffer) {
+                    m_map[display] = static_cast<Display::Input>(input);
                 }
             }
         }
 
-        return buffer.GetState() == NetworkBuffer::State::OK;
+        return buffer;
     }
 
     bool ChangeInputRequest::Serialize(NetworkBuffer& buffer) const {
@@ -42,6 +46,6 @@ namespace kvm {
             }
         }
 
-        return buffer.GetState() == NetworkBuffer::State::OK;
+        return buffer;
     }
 }

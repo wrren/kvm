@@ -6,16 +6,14 @@
 #include <map>
 
 namespace kvm {
-    class ChangeInputRequest : NetworkMessage {
+    class ChangeInputRequest : public NetworkMessage {
     public:
-
-        typedef std::map<Display::SerialNumber, Display::Input> InputMap;
 
         /**
          * Create a request input message that requests that the specified 
          * displays be set to the provided corresponding inputs.
          */
-        ChangeInputRequest(const InputMap& map);
+        ChangeInputRequest(const Display::InputMap& map);
 
         /**
          * Default Constructor
@@ -25,12 +23,12 @@ namespace kvm {
         /**
          * Set the input map contained in this message.
          */
-        void SetInputMap(const InputMap& map);
+        void SetInputMap(const Display::InputMap& map);
 
         /**
          * Get the input map contained in this message.
          */
-        const InputMap& GetInputMap() const;
+        const Display::InputMap& GetInputMap() const;
 
         /**
          * Serialize this message into the given buffer.
@@ -45,7 +43,7 @@ namespace kvm {
     private:
 
         /// Input Map
-        InputMap m_map;
+        Display::InputMap m_map;
     };
 }
 

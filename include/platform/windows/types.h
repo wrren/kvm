@@ -3,6 +3,7 @@
 
 #include <winsock2.h>
 #include <windef.h>
+#include <core/reference.h>
 
 namespace kvm {
   typedef struct {
@@ -14,11 +15,24 @@ namespace kvm {
     HWND messageWindow;
   } PlatformUSB;
 
-  typedef struct {
-    SOCKET id;
+  typedef struct PlatformSocketStruct {
+    SOCKET          id;
   } PlatformSocket;
 
-  typedef struct sockaddr_in  SocketAddress;
+  /// Used to control global WSAData initialization and destruction
+  static ReferenceCounter<WSADATA> PlatformSocketReferencesPlatformSocketReferences(
+    []() -> WSAData {
+      WSAData wsa;
+      WSAStartup(MAKEWORD(2, 2), &wsa);
+      return wsa;
+    },
+    [](WSAData& wsa) -> WSAData {
+      WSACleanup();
+      return wsa;
+    }
+  );
+
+  typedef struct sockaddr_in SocketAddress;
 }
 
 #endif // KVM_PLATFORM_TYPES_WINDOWS_H

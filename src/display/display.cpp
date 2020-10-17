@@ -4,6 +4,9 @@
 namespace kvm {
     const uint8_t Display::InputVPCCode = 0x60;
 
+    Display::Display()
+    {}
+
     Display::Display(const PlatformDisplay& display, Display::ManufacturerID manufacturer, Display::ProductID product, Display::SerialNumber serial, const std::string& name) :
     m_display(display),
     m_manufacturer(manufacturer),
@@ -83,5 +86,60 @@ namespace kvm {
 
     const PlatformDisplay& Display::GetPlatformDisplay() const {
         return m_display;
+    }
+
+    bool Display::Serialize(NetworkBuffer& buffer) const {
+        return buffer << m_manufacturer << m_product << m_serial;
+    }
+
+    bool Display::Deserialize(NetworkBuffer& buffer) {
+        return buffer >> m_manufacturer >> m_product >> m_serial;
+    }
+
+    bool Display::operator==(const Display& other) const {
+        return m_manufacturer == other.m_manufacturer && m_product == other.m_product && m_serial == other.m_serial;
+    }
+    bool Display::operator!=(const Display& other) const {
+        return !(*this == other);
+    }
+    bool Display::operator>=(const Display& other) const {
+        return m_manufacturer >= other.m_manufacturer || m_product >= other.m_product || m_serial >= other.m_serial;
+    }
+    bool Display::operator<=(const Display& other) const {
+        return m_manufacturer <= other.m_manufacturer || m_product <= other.m_product || m_serial <= other.m_serial;
+    }
+    bool Display::operator>(const Display& other) const {
+        return m_manufacturer > other.m_manufacturer || m_product > other.m_product || m_serial > other.m_serial;
+    }
+    bool Display::operator<(const Display& other) const {
+        return m_manufacturer < other.m_manufacturer || m_product < other.m_product || m_serial < other.m_serial;
+    }
+
+    void Display::PrintDisplayList(const Display::List& list, std::ostream& stream) {
+        stream.setf(std::ios::left, std::ios::adjustfield);
+        stream.width(80);
+        stream << "Display Name";
+        stream.width(20);
+        stream << "Manufacturer ID";
+        stream.width(20);
+        stream << "Serial Number";
+        stream << std::endl;
+
+        stream.width(120);
+        stream.fill('=');
+        stream << "=" << std::endl;
+        stream.fill(' ');
+
+        for(auto display : list) {
+            stream.setf(std::ios::left, std::ios::adjustfield);
+            stream.width(80);
+            stream << display.GetName();
+            stream.width(20);
+            stream << display.GetManufacturerID();
+            stream.width(20);
+            stream << display.GetSerialNumber();
+            stream << std::endl;
+        }
+    
     }
 }

@@ -8,16 +8,10 @@
 #include <map>
 
 namespace kvm {
-    class ChangeInputResponse : NetworkMessage {
+    class ChangeInputResponse : public NetworkMessage {
     public:
 
-        enum class Result : uint8_t {
-            DISPLAY_INACCESSIBLE,
-            INPUT_SELECT_FAILED,
-            INPUT_SELECT_SUCCEEDED
-        };
-
-        typedef std::map<Display::SerialNumber, Result> ResultMap;
+        typedef std::map<Display, bool> ResultMap;
 
         /**
          * Default Constructor

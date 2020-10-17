@@ -1,5 +1,6 @@
 #include <platform/functions.h>
 #include <WinSock2.h>
+#include <string>
 
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -29,5 +30,9 @@ namespace kvm {
     }
     int16_t NetworkToHost(int16_t in) {
         return ntohs(in);
+    }
+
+    std::string AddressToString(SocketAddress address) {
+        return std::string(inet_ntoa(address.sin_addr));
     }
 }

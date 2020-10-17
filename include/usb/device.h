@@ -17,6 +17,18 @@ namespace kvm {
     typedef uint16_t ProductID;
 
     /**
+     * Default Constructor
+     */
+    USBDevice();
+
+    /**
+     * Initializing Constructor
+     * @param vendorID Device Vendor ID
+     * @param productID Device Product ID
+     */
+    USBDevice(const VendorID vendorID, const ProductID productID);
+
+    /**
      * Initializing Constructor
      * @param description Device description
      * @param vendorID Device Vendor ID

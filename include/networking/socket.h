@@ -1,10 +1,11 @@
 #ifndef KVM_NETWORKING_SOCKET_H
 #define KVM_NETWORKING_SOCKET_H
 
-#include <kvm.h>
 #include <optional>
 #include <string>
+#include <core/core.h>
 #include <platform/types.h>
+#include <networking/buffer.h>
 
 namespace kvm {
     class Socket {
@@ -26,12 +27,18 @@ namespace kvm {
         typedef Result<SocketAddress, Socket::SocketError>  GetAddressResult;
         typedef std::optional<SocketError>                  ConnectResult;
         typedef std::optional<SocketError>                  ListenResult;
+        typedef std::optional<Socket>                       AcceptResult;
         typedef std::string                                 HostName;
 
         /**
          * Default Constructor
          */
         Socket();
+
+        /**
+         * Construct a socket representing a connection accepted from a peer.
+         */
+        Socket(PlatformSocket socket, SocketAddress peerAddress);
 
         /**
          * Connect this socket to the given address.
@@ -42,6 +49,21 @@ namespace kvm {
          * Bind this socket to the specified port and begin listening for incoming connections.
          */
         ListenResult Listen(uint16_t port);
+
+        /**
+         * Accept a new connection.
+         */
+        AcceptResult Accept() const;
+
+        /**
+         * Send data to the connected peer.
+         */
+        bool Send(const NetworkBuffer& buffer);
+
+        /**
+         * Receive data from the connected peer.
+         */
+        bool Receive(NetworkBuffer& buffer);
 
         /**
          * Disconnect this socket.
@@ -63,10 +85,22 @@ namespace kvm {
          */
         static GetAddressResult GetAddressForHostname(const HostName& hostname, uint16_t port);
 
+        /**
+         * Comparison Operator
+         */
+        bool operator==(const Socket& other) const;
+
+        /**
+         * Destructor
+         */
+        ~Socket();
+
     private:
 
         /// Socket Handle
         PlatformSocket m_socket;
+        /// Peer address
+        SocketAddress m_address;
         /// Current Socket State
         SocketState m_state;
     };

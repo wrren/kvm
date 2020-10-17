@@ -7,6 +7,8 @@
 #define DEFAULT_BUFFER_SIZE 2048
 
 namespace kvm {
+    class Serializable;
+
     /**
      * Container class that handles serialization to and from buffers that are sent over the network
      * through Socket instances.
@@ -43,10 +45,17 @@ namespace kvm {
         BufferSize GetOffset() const;
 
         /**
+         * Get the underlying buffer.
+         */
+        Buffer GetBuffer() const;
+
+
+        /**
          * Resets the internal offset value for this buffer. Subsequent reads and writes will
          * occur at the beginning of the buffer's storage space.
          */
         NetworkBuffer& Reset();
+        NetworkBuffer& Reset(Buffer buffer, BufferSize bufferSize);
 
         /**
          * Attempt to peek at a value inside the buffer. This does not advance the internal offset.
@@ -71,6 +80,7 @@ namespace kvm {
         friend NetworkBuffer& operator>>(NetworkBuffer& message, int32_t& value);
         friend NetworkBuffer& operator>>(NetworkBuffer& message, bool& value);
         friend NetworkBuffer& operator>>(NetworkBuffer& message, std::string& value);
+        friend NetworkBuffer& operator>>(NetworkBuffer& message, Serializable& value);
 
         /**
          * Input operator. Streams a value of the given type into the network message.
@@ -83,6 +93,12 @@ namespace kvm {
         friend NetworkBuffer& operator<<(NetworkBuffer& message, int32_t value);
         friend NetworkBuffer& operator<<(NetworkBuffer& message, bool value);
         friend NetworkBuffer& operator<<(NetworkBuffer& message, const std::string& value);
+        friend NetworkBuffer& operator<<(NetworkBuffer& message, const Serializable& value);
+
+        /**
+         * Boolean operator. Returns true if the network buffer is in the OK state, false otherwise.
+         */
+        operator bool() const;
 
         /**
          * Default Destructor

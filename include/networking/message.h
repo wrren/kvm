@@ -19,9 +19,9 @@ namespace kvm {
         Type GetType() const;
 
         /**
-         * Determines whether
+         * Determines whether the type field of the given buffer matches the given type.
          */
-        bool IsContainedIn(NetworkBuffer& buffer) const;
+        static bool IsContainedIn(Type type, NetworkBuffer& buffer);
 
         /**
          * Serialize this message into the given buffer.

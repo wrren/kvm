@@ -20,19 +20,19 @@ namespace kvm {
         if(NetworkMessage::Deserialize(buffer)) {
             m_result.clear();
 
-            uint8_t                 size;
-            Display::SerialNumber   serial;
-            uint8_t                 result;
+            uint8_t size;
+            Display display;
+            bool    result;
 
             buffer >> size;
 
-            for(int i = 0; i < size && buffer.GetState() == NetworkBuffer::State::OK; i++) {
-                buffer >> serial >> result;
-                m_result[serial] = static_cast<ChangeInputResponse::Result>(result);
+            for(int i = 0; i < size && buffer; i++) {
+                buffer >> display >> result;
+                m_result[display] = result;
             }
         }
 
-        return buffer.GetState() == NetworkBuffer::State::OK;
+        return buffer;
     }
 
     bool ChangeInputResponse::Serialize(NetworkBuffer& buffer) const {
@@ -40,10 +40,10 @@ namespace kvm {
             buffer << static_cast<uint32_t>(m_result.size());
 
             for(auto it = m_result.begin(); it != m_result.end(); ++it) {
-                buffer << it->first << static_cast<uint8_t>(it->second);
+                buffer << it->first << it->second;
             }
         }
 
-        return buffer.GetState() == NetworkBuffer::State::OK;
+        return buffer;
     }
 }

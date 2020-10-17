@@ -5,6 +5,7 @@
 
 namespace kvm {
     enum class NetworkMessageType: NetworkMessage::Type {
+        HEARTBEAT,
         CHANGE_INPUT_REQUEST,
         CHANGE_INPUT_RESPONSE
     };

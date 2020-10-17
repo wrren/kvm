@@ -1,12 +1,12 @@
 #ifndef KVM_USB_MONITOR_H
 #define KVM_USB_MONITOR_H
 
+#include <mutex>
+#include <vector>
+#include <string>
+#include <optional>
 #include <core/core.h>
 #include <usb/device.h>
-#include <vector>
-#include <optional>
-#include <string>
-#include <mutex>
 #include <platform/types.h>
 
 namespace kvm {
@@ -15,7 +15,7 @@ namespace kvm {
    */
   class USBMonitor {
   public:
-    class Subscriber {
+    class Listener {
     public:
 
       /**
@@ -48,12 +48,12 @@ namespace kvm {
     /**
      * Subscribe to USB device events.
      */
-    void Subscribe(Subscriber* subscriber);
+    void AddListener(Listener* subscriber);
 
     /**
      *  Unsubscribe from USB device events.
      */
-    void Unsubscribe(Subscriber* subscriber);
+    void RemoveListener(Listener* subscriber);
 
     /**
      * Check for new device connect or disconnect events.
@@ -74,8 +74,8 @@ namespace kvm {
 
     /// Platform USB Context
     PlatformUSB m_usb;
-    /// Device event subscribers
-    std::vector<Subscriber*> m_subscribers;
+    /// Device event listeners
+    std::vector<Listener*> m_listeners;
     /// Connected Devices
     std::vector<USBDevice> m_devices;
     /// Controls access to the device list from other threads

@@ -3,10 +3,13 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <ostream>
 #include <platform/types.h>
+#include <networking/serializable.h>
 
 namespace kvm {
-    class Display {
+    class Display : public Serializable {
     public:
         typedef std::vector<Display>        List;
         typedef std::string                 ManufacturerID;
@@ -26,6 +29,12 @@ namespace kvm {
             HDMI1   = 17,
             HDMI2   = 18
         };
+        typedef std::map<Display, Input>    InputMap;
+
+        /**
+         * Default Constructor
+         */
+        Display();
 
         /**
          * Initialize a Display object with the given platform display structure, manufacturer ID, product ID, serial number and name.
@@ -87,6 +96,31 @@ namespace kvm {
          * on failure.
          */
         static Input StringToInput(const std::string& string);
+
+        /**
+         * Serialize this display's identifying information.
+         */
+        virtual bool Serialize(NetworkBuffer& buffer) const override;
+
+        /**
+         * Deserialize this display's identifying information.
+         */
+        virtual bool Deserialize(NetworkBuffer& buffer) override;
+
+        /**
+         * Comparison Operators
+         */
+        bool operator==(const Display& other) const;
+        bool operator!=(const Display& other) const;
+        bool operator>=(const Display& other) const;
+        bool operator<=(const Display& other) const;
+        bool operator>(const Display& other) const;
+        bool operator<(const Display& other) const;
+
+        /**
+         * Print the given display list to the specified output stream
+         */
+        static void PrintDisplayList(const List& displays, std::ostream& stream);
 
     private:
 

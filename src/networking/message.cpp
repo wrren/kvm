@@ -9,18 +9,16 @@ namespace kvm {
         return m_type;
     }
 
-    bool NetworkMessage::IsContainedIn(NetworkBuffer& buffer) const {
-        NetworkMessage::Type type;
-        return buffer.Peek(type) && type == m_type;
+    bool NetworkMessage::IsContainedIn(NetworkMessage::Type type, NetworkBuffer& buffer) {
+        NetworkMessage::Type bufferType;
+        return buffer.Peek(bufferType) && type == bufferType;
     }
 
     bool NetworkMessage::Serialize(NetworkBuffer& buffer) const {
-        buffer << m_type;
-        return buffer.GetState() == NetworkBuffer::State::OK;
+        return buffer << m_type;
     }
 
     bool NetworkMessage::Deserialize(NetworkBuffer& buffer) {
-        buffer >> m_type;
-        return buffer.GetState() == NetworkBuffer::State::OK;
+        return buffer >> m_type;
     }
 }
