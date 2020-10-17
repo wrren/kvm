@@ -4,6 +4,7 @@ namespace kvm {
   KVM::KVM(uint16_t listenPort) :
   m_cluster(listenPort)
   {
+    m_monitor.AddListener(this);
     m_cluster.AddListener(this);
   }
 
@@ -56,37 +57,37 @@ namespace kvm {
   }
   
   void KVM::OnDeviceConnected(const kvm::USBDevice& device) {
-    auto displays = ListDisplays();
-    Display::InputMap changes;
+    if(device == m_device) {
+      auto displays = ListDisplays();
+      Display::InputMap changes;
 
-    for(auto input : m_inputs) {
-      for(auto display : displays) {
-        if(display == input.first && display.GetInput() != input.second) {
-          changes[display] = input.second;
+      for(auto input : m_inputs) {
+        for(auto display : displays) {
+          if(display == input.first && display.GetInput() != input.second) {
+            changes[display] = input.second;
+          }
         }
       }
-    }
 
-    if(device == m_device) {
       for(auto listener : m_listeners) {
         listener->OnTriggerDeviceConnected(device);
       }
 
       if(changes.size() > 0) {
         m_cluster.RequestInputChange(changes);
-        m_state = KVM::State::REQUESTING_INPUT;
+        ChangeState(KVM::State::REQUESTING_INPUT);
         for(auto listener : m_listeners) {
           listener->OnDisplayInputChangesRequested(changes);
         }
       } else {
-        m_state = KVM::State::ACTIVE;
+        ChangeState(KVM::State::ACTIVE);
       }
     }
   }
 
   void KVM::OnDeviceDisconnected(const kvm::USBDevice& device) {
     if(device == m_device) {
-      m_state = KVM::State::INACTIVE;
+      ChangeState(KVM::State::INACTIVE);
     }
   }
 
@@ -116,7 +117,7 @@ namespace kvm {
 
   void KVM::OnInputChangeResponse(const Node& sender, const std::map<Display, bool>& results) {
     if(m_state == KVM::State::REQUESTING_INPUT && ListDisplaysWithNonPreferredInput().size() == 0) {
-      m_state = KVM::State::ACTIVE;
+      ChangeState(KVM::State::ACTIVE);
     }
   }
 

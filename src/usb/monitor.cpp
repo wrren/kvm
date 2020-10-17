@@ -25,7 +25,6 @@ namespace kvm {
     for(auto listener : m_listeners) {
       listener->OnDeviceConnected(device);
     }
-    std::cout << "Device Connected: " << device.GetDescription() << " (" << device.GetVendorID() << ":" << device.GetProductID() << ")" << std::endl;
     m_deviceMutex.unlock();
   }
 
@@ -33,7 +32,6 @@ namespace kvm {
     m_deviceMutex.lock();
     for(auto d : m_devices) {
       if(d == device) {
-        std::cout << "Device Disconnected: " << d.GetDescription() << " (" << d.GetVendorID() << ":" << d.GetProductID() << ")" << std::endl;
         for(auto listener : m_listeners) {
           listener->OnDeviceDisconnected(d);
         }
