@@ -225,15 +225,13 @@ namespace kvm {
       }
     }
 
-
     return m_devices;
   }
 
 
   void USBMonitor::CheckForDeviceEvents() {
-    std::this_thread::sleep_for(1s);
     MSG msg;
-    if (m_usb.messageWindow != NULL && GetMessage(&msg, 0, 0, 0) > 0) {
+    if (m_usb.messageWindow != NULL && PeekMessage(&msg, 0, 0, 0, PM_REMOVE) > 0) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }

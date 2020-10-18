@@ -1,12 +1,5 @@
 #include <usb/monitor.h>
 #include <algorithm>
-#include <iostream>
-#include <libusb.h>
-#include <thread>
-
-
-
-
 
 namespace kvm {
   void USBMonitor::AddListener(USBMonitor::Listener* listener) {

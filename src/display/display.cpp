@@ -120,9 +120,9 @@ namespace kvm {
         stream.width(80);
         stream << "Display Name";
         stream.width(20);
-        stream << "Manufacturer ID";
-        stream.width(20);
         stream << "Serial Number";
+        stream.width(20);
+        stream << "Display Input";
         stream << std::endl;
 
         stream.width(120);
@@ -135,9 +135,9 @@ namespace kvm {
             stream.width(80);
             stream << display.GetName();
             stream.width(20);
-            stream << display.GetManufacturerID();
-            stream.width(20);
             stream << display.GetSerialNumber();
+            stream.width(20);
+            stream << Display::InputToString(display.GetInput());
             stream << std::endl;
         }
     

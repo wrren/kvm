@@ -8,10 +8,16 @@
 
 enum class RunMode {
   WATCH,
-  LIST_DEVICES
+  LIST_DEVICES,
+  SET_INPUTS
 };
 
 const uint16_t DefaultPort = 10191;
+
+typedef struct {
+  std::string               hostname;
+  uint16_t                  port;
+} NodeOption;
 
 typedef struct {
   RunMode                   mode;
@@ -19,11 +25,10 @@ typedef struct {
   kvm::USBDevice::VendorID  vendor;
   kvm::USBDevice::ProductID product;
   kvm::Display::InputMap    inputs;
-  std::vector<std::string>  nodes;
+  std::vector<NodeOption>   nodes;
 } Options;
 
 bool ParseOptions(int argc, char** argv, Options& options) {
-  bool sawVendor = false, sawProduct = false;
   options.inputs.clear();
   
   auto displays = kvm::Display::ListDisplays();
@@ -38,14 +43,34 @@ bool ParseOptions(int argc, char** argv, Options& options) {
       options.mode = RunMode::LIST_DEVICES;
       return true;
     }
-    if(strcmp(argv[i], "--port") == 0 && (i + 1) < argc) {
+
+    if(strcmp(argv[i], "--set-input") == 0 && (i + 2) < argc) {
+      if(options.mode == RunMode::WATCH) {
+        options.inputs.clear();
+      }
+      options.mode = RunMode::SET_INPUTS;
+      
+      bool foundDisplay = false;
+      auto serial       = atoi(argv[++i]);
+      auto input        = kvm::Display::StringToInput(argv[++i]);
+
+      for(auto display : displays) {
+        if(display.GetSerialNumber() == serial) {
+          options.inputs[display] = input;
+          foundDisplay = true;
+        }
+      }
+
+      if(!foundDisplay) {
+        std::cerr << "Failed to find display with serial number " << serial << std::endl;
+        return false;
+      }
+    } else if(strcmp(argv[i], "--port") == 0 && (i + 1) < argc) {
       options.port = atoi(argv[++i]);
     } else if(strcmp(argv[i], "--vendor") == 0 && (i + 1) < argc) {
       options.vendor = atoi(argv[++i]);
-      sawVendor = true;
     } else if(strcmp(argv[i], "--product") == 0 && (i + 1) < argc) {
       options.product = atoi(argv[++i]);
-      sawProduct = true;
     } else if(strcmp(argv[i], "--preferred-input") == 0 && (i + 2) < argc) {
       bool foundDisplay = false;
       auto serial       = atoi(argv[++i]);
@@ -63,18 +88,16 @@ bool ParseOptions(int argc, char** argv, Options& options) {
         return false;
       }
     } else if(strcmp(argv[i], "--node") == 0 && (i + 1) < argc) {
-      options.nodes.push_back((argv[++i]));
+      std::string node(argv[++i]);
+
+      if(node.find_first_of(":") != std::string::npos) {
+        std::string hostname = node.substr(0, node.find_first_of(":"));
+        uint16_t port = atoi(node.substr(node.find_first_of(":") + 1, node.length() - node.find_first_of(":")).c_str());
+        options.nodes.push_back(NodeOption{hostname, port});
+      } else {
+        options.nodes.push_back(NodeOption{node, options.port});
+      }
     }
-  }
-
-  if(!sawVendor) {
-    std::cerr << "Please specify a USB device Vendor ID to be watched for connection events." << std::endl;
-    return false;
-  }
-
-  if(!sawProduct) {
-    std::cerr << "Please specify a USB device Product ID to be watched for connection events." << std::endl;
-    return false;
   }
 
   return true;
@@ -122,7 +145,7 @@ int main(int argc, char** argv) {
   if(ParseOptions(argc, argv, options)) {
     kvm::KVM kvm(options.port);
     if(!kvm.Initialize()) {
-      std::cout << "Failed to initialize USB monitor." << std::endl;
+      std::cout << "Failed to initialize KVM." << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -130,7 +153,7 @@ int main(int argc, char** argv) {
       kvm::USBDevice::PrintDeviceList(kvm.ListUSBDevices(), std::cout);
       std::cout << std::endl;
       kvm::Display::PrintDisplayList(kvm::Display::ListDisplays(), std::cout);
-    } else {
+    } else if(options.mode == RunMode::WATCH) {
       ConsoleListener listener;
       kvm.AddListener(&listener);
       kvm::USBDevice trigger(options.vendor, options.product);
@@ -146,13 +169,17 @@ int main(int argc, char** argv) {
       }
 
       for(auto node : options.nodes) {
-        std::cout << "Adding Node " << node << std::endl;
-        kvm.AddNode(node, options.port);
+        std::cout << "Adding Node " << node.hostname << ":" << node.port << std::endl;
+        kvm.AddNode(node.hostname, node.port);
       }
 
       while(true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         kvm.Pump();
+      }
+    } else {
+      for(std::pair<kvm::Display, kvm::Display::Input> input : options.inputs) {
+        input.first.SetInput(input.second);
       }
     }
   }  

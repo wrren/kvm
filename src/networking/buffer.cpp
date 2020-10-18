@@ -6,33 +6,53 @@
 #define MAX_STRING_LENGTH 1024
 
 namespace kvm {
-    NetworkBuffer::NetworkBuffer(NetworkBuffer::Buffer buffer, NetworkBuffer::BufferSize size) :
-    NetworkBuffer(size) {
-        if(m_buffer != nullptr) {
-            memcpy(m_buffer, buffer, size);
-        }
-    }
-
-    NetworkBuffer::NetworkBuffer(NetworkBuffer::BufferSize size) :
+    NetworkBuffer::NetworkBuffer() :
     m_offset(0),
-    m_length(size),
-    m_buffer(nullptr),
-    m_state(NetworkBuffer::State::OK) {
-        if(m_length > 0) {
-            m_buffer = new uint8_t[size];
-        }
-    }
+    m_length(0),
+    m_state(NetworkBuffer::State::OK)
+    {}
+
+    NetworkBuffer::NetworkBuffer(const NetworkBuffer& other) :
+    m_buffer(other.m_buffer),
+    m_state(other.m_state),
+    m_offset(other.m_offset),
+    m_length(other.m_length)
+    {}
 
     NetworkBuffer::State NetworkBuffer::GetState() const {
         return m_state;
     }
 
-    NetworkBuffer::BufferSize NetworkBuffer::GetOffset() const {
+    NetworkBuffer::Offset NetworkBuffer::GetCapacity() const {
+        return m_buffer.max_size();
+    }
+
+    NetworkBuffer::Offset NetworkBuffer::GetOffset() const {
         return m_offset;
     }
 
-    NetworkBuffer::Buffer NetworkBuffer::GetBuffer() const {
-        return m_buffer;
+    uint8_t* NetworkBuffer::GetBuffer() {
+        return m_buffer.data();
+    }
+
+    const uint8_t* NetworkBuffer::GetBuffer() const {
+        return m_buffer.data();
+    }
+
+    NetworkBuffer::Offset NetworkBuffer::GetSize() const {
+        return m_length;
+    }
+
+    NetworkBuffer& NetworkBuffer::Append(uint8_t* data, size_t size) {
+        if(m_offset + size <= m_buffer.max_size()) {
+            memcpy(m_buffer.data() + m_offset, data, size);
+            m_offset += size;
+            m_length = m_offset;
+        } else {
+            m_state = NetworkBuffer::State::ERROR_OVERFLOW;
+        }
+
+        return *this;
     }
 
     NetworkBuffer& NetworkBuffer::Reset() {
@@ -40,19 +60,22 @@ namespace kvm {
         m_offset    = 0;
         return *this;
     }
-    NetworkBuffer& NetworkBuffer::Reset(NetworkBuffer::Buffer buffer, NetworkBuffer::BufferSize bufferSize) {
+    NetworkBuffer& NetworkBuffer::Reset(uint8_t* data, size_t size) {
+        if(size <= m_buffer.max_size()) {
+            memcpy(m_buffer.data(), data, size);
+            m_state     = NetworkBuffer::State::OK;
+            m_offset    = 0;
+            m_length    = size;
+        } else {
+            m_state = NetworkBuffer::State::ERROR_OVERFLOW;
+        }
+        
+        return *this;
+    }
+    NetworkBuffer& NetworkBuffer::Reset(NetworkBuffer::Buffer buffer) {
         m_state     = NetworkBuffer::State::OK;
         m_offset    = 0;
-
-        if(m_buffer != nullptr) {
-            delete[] m_buffer;
-        }
-
-        if(bufferSize > 0) {
-            m_buffer = new uint8_t[bufferSize];
-            m_length = bufferSize;
-            memcpy(m_buffer, buffer, bufferSize);
-        }
+        m_buffer    = buffer;
         
         return *this;
     }
@@ -146,11 +169,12 @@ namespace kvm {
         return buffer;    
     }
 
-    NetworkBuffer& NetworkBuffer::Deserialize(void* out, NetworkBuffer::BufferSize size) {
+    NetworkBuffer& NetworkBuffer::Deserialize(void* out, NetworkBuffer::Offset size) {
         if(m_state == NetworkBuffer::State::OK) {
-            if(m_offset + size < m_length) {
-                memcpy(out, m_buffer + m_offset, size);
-                m_buffer += size;
+            if(m_offset + size < m_buffer.max_size()) {
+                memcpy(out, m_buffer.data() + m_offset, size);
+                m_offset += size;
+                m_length = m_offset;
             } else {
                 m_state = NetworkBuffer::State::ERROR_OVERFLOW;
             }
@@ -158,11 +182,12 @@ namespace kvm {
         return *this;
     }
 
-    NetworkBuffer& NetworkBuffer::Serialize(const void* in, NetworkBuffer::BufferSize size) {
+    NetworkBuffer& NetworkBuffer::Serialize(const void* in, NetworkBuffer::Offset size) {
         if(m_state == NetworkBuffer::State::OK) {
-            if(m_offset + size < m_length) {
-                memcpy(m_buffer + m_offset, in, size);
-                m_buffer += size;
+            if(m_offset + size < m_buffer.max_size()) {
+                memcpy(m_buffer.data() + m_offset, in, size);
+                m_offset += size;
+                m_length = m_offset;
             } else {
                 m_state = NetworkBuffer::State::ERROR_OVERFLOW;
             }
@@ -172,9 +197,5 @@ namespace kvm {
 
     NetworkBuffer::operator bool() const {
         return m_state == NetworkBuffer::State::OK;
-    }
-
-    NetworkBuffer::~NetworkBuffer() {
-        delete[] m_buffer;
     }
 }

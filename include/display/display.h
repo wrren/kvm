@@ -29,7 +29,7 @@ namespace kvm {
             HDMI1   = 17,
             HDMI2   = 18
         };
-        typedef std::map<Display, Input>    InputMap;
+        typedef std::map<Display, Input> InputMap;
 
         /**
          * Default Constructor

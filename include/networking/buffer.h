@@ -3,8 +3,7 @@
 
 #include <cstdint>
 #include <string>
-
-#define DEFAULT_BUFFER_SIZE 2048
+#include <array>
 
 namespace kvm {
     class Serializable;
@@ -16,8 +15,8 @@ namespace kvm {
     class NetworkBuffer {
     public:
 
-        typedef uint8_t*    Buffer;
-        typedef size_t      BufferSize;
+        typedef std::array<uint8_t, 2048>   Buffer;
+        typedef Buffer::size_type           Offset;
 
         enum class State {
             OK,
@@ -25,14 +24,14 @@ namespace kvm {
         };
 
         /**
-         * Construct a NetworkBuffer using the contents of the given buffer.
+         * Default Constructor
          */
-        NetworkBuffer(Buffer buffer, BufferSize size = DEFAULT_BUFFER_SIZE);
+        NetworkBuffer();
 
         /**
-         * Construct a blank NetworkBuffer that can hold the given number of bytes.
+         * Copy Constructor
          */
-        NetworkBuffer(BufferSize size = DEFAULT_BUFFER_SIZE);
+        NetworkBuffer(const NetworkBuffer& buffer);
 
         /**
          * Get the network message's current state.
@@ -40,22 +39,38 @@ namespace kvm {
         State GetState() const;
 
         /**
+         * Get the buffer's capacity
+         */
+        Offset GetCapacity() const;
+
+        /**
          * Get the current buffer offset.
          */
-        BufferSize GetOffset() const;
+        Offset GetOffset() const;
 
         /**
          * Get the underlying buffer.
          */
-        Buffer GetBuffer() const;
+        uint8_t* GetBuffer();
+        const uint8_t* GetBuffer() const;
 
+        /**
+         * Get the amount of data that's been serialized into this buffer.
+         */
+        Offset GetSize() const;
+
+        /**
+         * Append data at the current offset
+         */
+        NetworkBuffer& Append(uint8_t* data, size_t size);
 
         /**
          * Resets the internal offset value for this buffer. Subsequent reads and writes will
          * occur at the beginning of the buffer's storage space.
          */
         NetworkBuffer& Reset();
-        NetworkBuffer& Reset(Buffer buffer, BufferSize bufferSize);
+        NetworkBuffer& Reset(uint8_t* data, size_t size);
+        NetworkBuffer& Reset(Buffer buffer);
 
         /**
          * Attempt to peek at a value inside the buffer. This does not advance the internal offset.
@@ -100,29 +115,24 @@ namespace kvm {
          */
         operator bool() const;
 
-        /**
-         * Default Destructor
-         */
-        ~NetworkBuffer();
-
     private:
 
         /**
          * Deserialize the specified number of bytes out of the buffer and advance the offset.
          */
-        NetworkBuffer& Deserialize(void* out, BufferSize size);
+        NetworkBuffer& Deserialize(void* out, Offset size);
 
         /**
          * Serialize the specified number of bytes into the buffer and advance the offset.
          */
-        NetworkBuffer& Serialize(const void* in, BufferSize size);
+        NetworkBuffer& Serialize(const void* in, Offset size);
 
         /// Message Buffer
         Buffer m_buffer;
         /// Current Offset
-        BufferSize m_offset;
-        /// Buffer Length
-        BufferSize m_length;
+        Offset m_offset;
+        /// Contained Data Length
+        Offset m_length;
         /// Current State
         State m_state;
     };

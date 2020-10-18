@@ -75,7 +75,7 @@ namespace kvm {
         struct sockaddr_in address;
         address.sin_addr.s_addr     = ip;
         address.sin_family          = AF_INET;
-        address.sin_port            = port;
+        address.sin_port            = HostToNetwork(port);
 
         return Socket::GetAddressResult(address);
     }
@@ -97,7 +97,7 @@ namespace kvm {
         struct sockaddr_in address;
         address.sin_addr.s_addr     = addresses[0]->s_addr;
         address.sin_family          = AF_INET;
-        address.sin_port            = port;
+        address.sin_port            = HostToNetwork(port);
 
         return Socket::GetAddressResult(address);
     }

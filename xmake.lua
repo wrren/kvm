@@ -13,9 +13,6 @@ target("kvm")
 
   if is_os("windows") then
     add_files("src/platform/windows/*.cpp")
-    add_includedirs("$(projectdir)/deps/libusb/include/libusb-1.0")
-    add_linkdirs("deps/libusb/MS64/dll")
-    add_links("libusb-1.0")
     add_defines("KVM_OS_WINDOWS", "UNICODE")
     add_syslinks("gdi32", "msimg32", "user32", "Dxva2", "Setupapi", "Advapi32")
   end

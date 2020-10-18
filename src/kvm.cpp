@@ -131,7 +131,7 @@ namespace kvm {
   }
 
   void KVM::Pump() {
-    m_monitor.CheckForDeviceEvents();
     m_cluster.Pump();
+    m_monitor.CheckForDeviceEvents();
   }
 }

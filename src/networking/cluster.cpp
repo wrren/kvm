@@ -10,7 +10,7 @@ namespace kvm {
   {}
 
   bool Cluster::Initialize() {
-    return m_socket.Listen(m_listenPort).has_value() == false;
+    return !m_socket.Listen(m_listenPort).has_value();
   }
 
   void Cluster::AddNode(const std::string& hostname, uint16_t port) {
@@ -21,9 +21,9 @@ namespace kvm {
 
   void Cluster::RequestInputChange(const std::map<Display, Display::Input>& changes) {
     ChangeInputRequest request(changes);
-    NetworkBuffer buffer(1024);
+    NetworkBuffer buffer;
     if(request.Serialize(buffer)) {
-      for(auto node : m_nodes) {
+      for(auto &node : m_nodes) {
         node.Send(buffer);
       }
     }
@@ -31,9 +31,9 @@ namespace kvm {
 
   void Cluster::RespondToInputChangeRequest(const Node& sender, const std::map<Display, bool>& changes) {
     ChangeInputResponse response(changes);
-    NetworkBuffer buffer(1024);
+    NetworkBuffer buffer;
     if(response.Serialize(buffer)) {
-      for(auto node : m_nodes) {
+      for(auto &node : m_nodes) {
         node.Send(buffer);
       }
     }
@@ -61,7 +61,7 @@ namespace kvm {
       }
     }
 
-    for(auto node : m_nodes) {
+    for(auto &node : m_nodes) {
       node.Pump();
     }
   }

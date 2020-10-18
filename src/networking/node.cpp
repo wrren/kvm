@@ -37,16 +37,18 @@ namespace kvm {
 
   void Node::Pump() {
     if(m_socket.GetState() != Socket::SocketState::CONNECTED) {
-      if(m_socket.Connect(m_address).has_value() == false) {
+      auto result = m_socket.Connect(m_address);
+      if(result.has_value() == false) {
         for(auto listener : m_listeners) {
           listener->OnNodeConnected(*this);
         }
+        m_lastSeen = std::chrono::system_clock::now();
       }
 
       return;
     }
 
-    NetworkBuffer buffer(1024);
+    NetworkBuffer buffer;
     
     if(m_spacer(std::chrono::seconds(5))) {
       Heartbeat heartbeat;
@@ -67,7 +69,7 @@ namespace kvm {
     }
 
     if( m_socket.GetState() != Socket::SocketState::CONNECTED || 
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_lastSeen) >= std::chrono::seconds(10)) {
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_lastSeen) >= std::chrono::seconds(15)) {
       for(auto listener : m_listeners) {
         listener->OnNodeDisconnected(*this);
       }

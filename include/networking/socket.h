@@ -11,14 +11,14 @@ namespace kvm {
     class Socket {
     public:
 
-        enum class SocketError {
+        enum class SocketError : uint8_t {
             INITIALIZATION_ERROR,
             DNS_ERROR,
             CONNECT_ERROR,
             BIND_ERROR
         };
 
-        enum class SocketState {
+        enum class SocketState : uint8_t {
             DISCONNECTED,
             CONNECTED,
             LISTENING

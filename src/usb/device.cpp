@@ -1,5 +1,5 @@
 #include <usb/device.h>
-#include <iostream>
+#include <ostream>
 
 namespace kvm {
 
