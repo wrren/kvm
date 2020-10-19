@@ -20,9 +20,9 @@ namespace kvm {
         if(NetworkMessage::Deserialize(buffer)) {
             m_map.clear();
 
-            uint8_t size;
-            Display display;
-            uint8_t input;
+            uint32_t    size;
+            Display     display;
+            uint8_t     input;
 
             buffer >> size;
 

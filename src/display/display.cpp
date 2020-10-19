@@ -7,6 +7,13 @@ namespace kvm {
     Display::Display()
     {}
 
+    Display::Display(Display::ManufacturerID manufacturer, Display::ProductID product, Display::SerialNumber serial, const std::string& name) :
+    m_manufacturer(manufacturer),
+    m_product(product),
+    m_serial(serial),
+    m_name(name)
+    {}
+
     Display::Display(const PlatformDisplay& display, Display::ManufacturerID manufacturer, Display::ProductID product, Display::SerialNumber serial, const std::string& name) :
     m_display(display),
     m_manufacturer(manufacturer),

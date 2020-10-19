@@ -171,10 +171,9 @@ namespace kvm {
 
     NetworkBuffer& NetworkBuffer::Deserialize(void* out, NetworkBuffer::Offset size) {
         if(m_state == NetworkBuffer::State::OK) {
-            if(m_offset + size < m_buffer.max_size()) {
+            if(m_offset + size <= m_length) {
                 memcpy(out, m_buffer.data() + m_offset, size);
                 m_offset += size;
-                m_length = m_offset;
             } else {
                 m_state = NetworkBuffer::State::ERROR_OVERFLOW;
             }

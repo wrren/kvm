@@ -4,4 +4,5 @@ Use DDC/CI to change your monitor's inputs in response to USB device connect or 
 
 # Todo
 
-- [ ] Detect USB device connects and disconnects.
+- [x] Detect USB device connects and disconnects.
+- [x] Send DDC command to connected displays.
