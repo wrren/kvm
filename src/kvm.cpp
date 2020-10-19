@@ -104,6 +104,9 @@ namespace kvm {
   }
 
   void KVM::OnInputChangeRequested(const Node& sender, const Display::InputMap& changes) {
+    for(auto listener : m_listeners) {
+      listener->OnDisplayInputChangeRequestReceived(sender, changes);
+    }
     auto displays = ListDisplays();
 
     for(auto change : changes) {

@@ -134,6 +134,10 @@ public:
     std::cout << "Trigger Device Connected: " << device.GetDescription() << std::endl;
   }
 
+  virtual void OnDisplayInputChangeRequestReceived(const kvm::Node& sender, const kvm::Display::InputMap& changes) override {
+    std::cout << "Received Input Change Request with " << changes.size() << " Input Changes..." << std::endl;
+  }
+
   virtual void OnDisplayInputChangesRequested(const kvm::Display::InputMap& changes) override {
     std::cout << "Requested " << changes.size() << " Input Changes..." << std::endl;
   }

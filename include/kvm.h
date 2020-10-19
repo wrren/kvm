@@ -36,17 +36,26 @@ namespace kvm {
             /**
              * Called when KVM transitions between states
              */
-            virtual void OnStateChange(State previousState, State newState) = 0;
+            virtual void OnStateChange(State previousState, State newState)
+            {}
 
             /**
              * Called when the trigger USB device has been connected.
              */
-            virtual void OnTriggerDeviceConnected(const USBDevice& device) = 0;
+            virtual void OnTriggerDeviceConnected(const USBDevice& device)
+            {}
+
+            /**
+             * Called when a connected node requests a set of display input changes from us.
+             */
+            virtual void OnDisplayInputChangeRequestReceived(const Node& sender, const Display::InputMap& changes)
+            {}
 
             /**
              * Called when this node requests a set of display inputs to be changed.
              */
-            virtual void OnDisplayInputChangesRequested(const Display::InputMap& changes) = 0;
+            virtual void OnDisplayInputChangesRequested(const Display::InputMap& changes)
+            {}
         };
 
         /**
