@@ -5,6 +5,7 @@
 #include <display/display.h>
 #include <vector>
 #include <string>
+#include <thread>
 
 enum class RunMode {
   WATCH,

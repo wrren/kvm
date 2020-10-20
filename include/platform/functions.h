@@ -1,6 +1,7 @@
 #ifndef KVM_PLATFORM_FUNCTIONS_H
 #define KVM_PLATFORM_FUNCTIONS_H
 
+#include <string>
 #include <cstdint>
 #include <platform/types.h>
 

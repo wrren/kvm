@@ -163,6 +163,7 @@ namespace kvm {
         } else {
             buffer.m_state = NetworkBuffer::State::ERROR_OVERFLOW;
         }     
+        return buffer;
     }
     NetworkBuffer& operator<<(NetworkBuffer& buffer, const Serializable& value) {
         value.Serialize(buffer);

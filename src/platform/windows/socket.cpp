@@ -143,9 +143,7 @@ namespace kvm {
         }
       
         if(FD_ISSET(m_socket.id, &readSet)) {
-          buffer.Reset();
           uint8_t receiveBuffer[2048];
-          
           int receiveSize = recv(m_socket.id, (char*) receiveBuffer, 2048, 0);
 
           if(receiveSize == SOCKET_ERROR) {

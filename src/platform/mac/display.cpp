@@ -15,7 +15,6 @@ namespace kvm {
         CGDirectDisplayID ids[MAX_DISPLAYS];
         uint32_t returned;
         auto error = CGGetOnlineDisplayList(MAX_DISPLAYS, ids, &returned);
-        Display::Index index = 0;
         if(error == 0) {
             for(int i = 0; i < returned; i++) {
                 if(CGDisplayIsBuiltin(ids[i])) {

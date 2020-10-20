@@ -67,7 +67,7 @@ namespace kvm {
   bool EDID::GetDisplayName(std::string& name) const {
     if(m_bufferSize >= 126) {
       char nameArray[14];
-      nameArray[13] = NULL;
+      memset(nameArray, 0, 14);
       for(int offset = 72; offset < 126; offset += 18) {
         const uint8_t type = m_buffer[offset + 3];
 

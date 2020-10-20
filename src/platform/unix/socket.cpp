@@ -11,6 +11,12 @@ namespace kvm {
     m_state(Socket::SocketState::DISCONNECTED)
     {}
 
+    Socket::Socket(PlatformSocket socket, SocketAddress address) :
+    m_state(Socket::SocketState::CONNECTED),
+    m_socket(socket),
+    m_address(address)
+    {}
+
     Socket::ConnectResult Socket::Connect(const SocketAddress& address) {
         if(m_state != Socket::SocketState::DISCONNECTED) {
             Disconnect();
@@ -59,6 +65,63 @@ namespace kvm {
         return Socket::ListenResult();;
     }
 
+    Socket::AcceptResult Socket::Accept() const {
+        if(m_state == Socket::SocketState::LISTENING) {
+            fd_set readSet;
+            struct timeval timeout;
+            FD_ZERO(&readSet);
+            FD_SET(m_socket, &readSet);
+
+            timeout.tv_sec  = 0;
+            timeout.tv_usec = 0;
+
+            if(select(m_socket + 1, &readSet, NULL, NULL, &timeout) > 0) {
+                SocketAddress   clientAddress;
+                socklen_t       clientAddressLength = sizeof(SocketAddress);
+                PlatformSocket  clientSocket = accept(m_socket, (struct sockaddr*) &clientAddress, &clientAddressLength);
+
+                if(clientSocket != -1) {
+                    return Socket::AcceptResult(Socket(clientSocket, clientAddress));
+                }
+            }
+        }
+        return Socket::AcceptResult();
+    }
+
+    bool Socket::Send(const NetworkBuffer& buffer) {
+        if(m_state == Socket::SocketState::CONNECTED && buffer.GetOffset() > 0 && buffer) {
+            return send(m_socket, buffer.GetBuffer(), buffer.GetOffset(), 0) > 0;
+        }
+        return false;
+    }
+
+    bool Socket::Receive(NetworkBuffer& buffer) {
+        if(m_state == Socket::SocketState::CONNECTED) {
+            fd_set readSet;
+            struct timeval timeout;
+            FD_ZERO(&readSet);
+            FD_SET(m_socket, &readSet);
+
+            timeout.tv_sec  = 0;
+            timeout.tv_usec = 0;
+
+            if(select(m_socket + 1, &readSet, NULL, NULL, &timeout) > 0) {
+                uint8_t receiveBuffer[2048];            
+                int receiveSize = recv(m_socket, (char*) receiveBuffer, 2048, 0);
+
+                if(receiveSize == -1) {
+                    m_state = Socket::SocketState::DISCONNECTED;
+                    return false;
+                }
+
+                buffer.Reset(receiveBuffer, receiveSize);
+
+                return true;
+            }
+        }
+        return false;
+    }
+
     void Socket::Disconnect() {
         if(m_state != Socket::SocketState::DISCONNECTED) {
             close(m_socket);
@@ -66,11 +129,7 @@ namespace kvm {
             m_state     = Socket::SocketState::DISCONNECTED;
         }
     }
-
-    Socket::SocketState Socket::GetState() const {
-        return m_state;
-    }
-
+    
     Socket::GetAddressResult Socket::GetAddressForIP(int ip, uint16_t port) {
         struct sockaddr_in address;
         address.sin_addr.s_addr     = ip;
@@ -101,4 +160,7 @@ namespace kvm {
 
         return Socket::GetAddressResult(address);
     }
+
+    Socket::~Socket()
+    {}
 }

@@ -27,4 +27,10 @@ namespace kvm {
     int16_t NetworkToHost(int16_t in) {
         return ntohs(in);
     }
+
+    std::string AddressToString(SocketAddress address) {
+        char buffer[128];
+        inet_ntop(AF_INET, &(address.sin_addr), buffer, 128);
+        return std::string(buffer);
+    }
 }
