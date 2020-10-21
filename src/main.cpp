@@ -73,21 +73,9 @@ bool ParseOptions(int argc, char** argv, Options& options) {
     } else if(strcmp(argv[i], "--product") == 0 && (i + 1) < argc) {
       options.product = atoi(argv[++i]);
     } else if(strcmp(argv[i], "--preferred-input") == 0 && (i + 2) < argc) {
-      bool foundDisplay = false;
       auto serial       = atoi(argv[++i]);
       auto input        = kvm::Display::StringToInput(argv[++i]);
-
-      for(auto display : displays) {
-        if(display.GetSerialNumber() == serial) {
-          options.inputs[display] = input;
-          foundDisplay = true;
-        }
-      }
-
-      if(!foundDisplay) {
-        std::cerr << "Failed to find display with serial number " << serial << std::endl;
-        return false;
-      }
+      options.inputs[kvm::Display(serial)] = input;
     } else if(strcmp(argv[i], "--node") == 0 && (i + 1) < argc) {
       std::string node(argv[++i]);
 
@@ -170,7 +158,7 @@ int main(int argc, char** argv) {
       std::cout << "Watching for USB Device " << options.vendor << ":" << options.product << std::endl;
       
       for(auto input : options.inputs) {
-        std::cout << "Prefer Input " << kvm::Display::InputToString(input.second) << " For Display " << input.first.GetName() << " (" << input.first.GetSerialNumber() << ")" << std::endl;
+        std::cout << "Prefer Input " << kvm::Display::InputToString(input.second) << " For Display " << input.first.GetSerialNumber() << std::endl;
       }
 
       for(auto node : options.nodes) {
