@@ -76,6 +76,11 @@ namespace kvm {
         SocketState GetState() const;
 
         /**
+         * Get the address to which this socket is connected or bound.
+         */
+        SocketAddress GetAddress() const;
+
+        /**
          * Get the socket address for an IP and port combination.
          */
         static GetAddressResult GetAddressForIP(int ip, uint16_t port);

@@ -11,7 +11,8 @@ namespace kvm {
   }
 
   Node::Node(Socket socket) :
-  m_socket(socket) 
+  m_socket(socket),
+  m_address(socket.GetAddress())
   {}
 
   SocketAddress Node::GetAddress() const {
