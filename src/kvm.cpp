@@ -59,12 +59,12 @@ namespace kvm {
   void KVM::OnDeviceConnected(const kvm::USBDevice& device) {
     if(device == m_device) {
       auto displays = ListDisplays();
-      Display::InputMap changes;
+      Display::InputMap changes(m_inputs);
 
       for(auto input : m_inputs) {
         for(auto display : displays) {
-          if(display == input.first && display.GetInput() != input.second) {
-            changes[display] = input.second;
+          if(display == input.first && display.GetInput() == input.second) {
+            changes.erase(display);
           }
         }
       }

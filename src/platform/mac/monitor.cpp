@@ -155,7 +155,10 @@ namespace kvm
 
     void USBMonitor::CheckForDeviceEvents() {
         if(m_usb.context != nullptr) {
-            libusb_handle_events(m_usb.context);
+            struct timeval timeout;
+            timeout.tv_sec  = 0;
+            timeout.tv_usec = 0;
+            libusb_handle_events_timeout(m_usb.context, &timeout);
         }
     }
 }

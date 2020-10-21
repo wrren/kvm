@@ -7,6 +7,10 @@ namespace kvm {
     Display::Display()
     {}
 
+    Display::Display(Display::SerialNumber serial) :
+    m_serial(serial)
+    {}
+
     Display::Display(Display::ManufacturerID manufacturer, Display::ProductID product, Display::SerialNumber serial, const std::string& name) :
     m_manufacturer(manufacturer),
     m_product(product),
@@ -96,30 +100,30 @@ namespace kvm {
     }
 
     bool Display::Serialize(NetworkBuffer& buffer) const {
-        return buffer << m_manufacturer << m_product << m_serial;
+        return buffer << m_serial;
     }
 
     bool Display::Deserialize(NetworkBuffer& buffer) {
-        return buffer >> m_manufacturer >> m_product >> m_serial;
+        return buffer >> m_serial;
     }
 
     bool Display::operator==(const Display& other) const {
-        return m_manufacturer == other.m_manufacturer && m_product == other.m_product && m_serial == other.m_serial;
+        return m_serial == other.m_serial;
     }
     bool Display::operator!=(const Display& other) const {
         return !(*this == other);
     }
     bool Display::operator>=(const Display& other) const {
-        return m_manufacturer >= other.m_manufacturer || m_product >= other.m_product || m_serial >= other.m_serial;
+        return m_serial >= other.m_serial;
     }
     bool Display::operator<=(const Display& other) const {
-        return m_manufacturer <= other.m_manufacturer || m_product <= other.m_product || m_serial <= other.m_serial;
+        return m_serial <= other.m_serial;
     }
     bool Display::operator>(const Display& other) const {
-        return m_manufacturer > other.m_manufacturer || m_product > other.m_product || m_serial > other.m_serial;
+        return m_serial > other.m_serial;
     }
     bool Display::operator<(const Display& other) const {
-        return m_manufacturer < other.m_manufacturer || m_product < other.m_product || m_serial < other.m_serial;
+        return m_serial < other.m_serial;
     }
 
     void Display::PrintDisplayList(const Display::List& list, std::ostream& stream) {

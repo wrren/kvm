@@ -37,6 +37,11 @@ namespace kvm {
         Display();
 
         /**
+         * Initialize a Display object with the given serial number.
+         */
+        Display(SerialNumber serial);
+
+        /**
          * Initialize a Display object with the given platform display structure, manufacturer ID, product ID, serial number and name.
          */
         Display(ManufacturerID manufacturer, ProductID product, SerialNumber serial, const std::string& name);
